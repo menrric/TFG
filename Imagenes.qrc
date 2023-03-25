@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="prefijoNuevo">
+    <file>FlechaAbajo.png</file>
+    <file>FlechaArriba.png</file>
+  </qresource>
+</RCC>
