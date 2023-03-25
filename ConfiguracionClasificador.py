@@ -7,9 +7,10 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox,QTableWidgetItem
+from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox, QTableWidgetItem
 
-class Ui_Form(object):
+
+class Ui_Form(QDialog):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(577, 391)
@@ -32,87 +33,138 @@ class Ui_Form(object):
         self.horizontalLayout.addWidget(self.tableWidget)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+
+
+        #UP ROW BUTTON
         self.pushButtonUp = QtWidgets.QPushButton(Form)
         self.pushButtonUp.setText("")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/prefijoNuevo/FlechaArriba.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        icon.addPixmap(QtGui.QPixmap("FlechaArriba.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         self.pushButtonUp.setIcon(icon)
         self.pushButtonUp.setObjectName("pushButtonUp")
         self.verticalLayout.addWidget(self.pushButtonUp)
+        self.pushButtonUp.clicked.connect(self.move_row_up)
+
+
         self.pushButtonDown = QtWidgets.QPushButton(Form)
         self.pushButtonDown.setText("")
         icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/prefijoNuevo/FlechaAbajo.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
+        icon1.addPixmap(QtGui.QPixmap("FlechaAbajo.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         self.pushButtonDown.setIcon(icon1)
         self.pushButtonDown.setObjectName("pushButtonDown")
         self.verticalLayout.addWidget(self.pushButtonDown)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.pushButtonDown.clicked.connect(self.move_row_down)
+
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                           QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout.addItem(spacerItem)
+
+        # ADD BUTTON
         self.pushButtonAdd = QtWidgets.QPushButton(Form)
         self.pushButtonAdd.setObjectName("pushButtonAdd")
-        self.pushButtonAdd.clicked.connect(PruebaTabla2.add_item)
-
         self.verticalLayout.addWidget(self.pushButtonAdd)
+        self.pushButtonAdd.clicked.connect(self.add_item)
+
+        # EDIT BUTTON
         self.pushButtonEdit = QtWidgets.QPushButton(Form)
         self.pushButtonEdit.setObjectName("pushButtonEdit")
         self.verticalLayout.addWidget(self.pushButtonEdit)
+        self.pushButtonEdit.clicked.connect(self.edit_item)
+
+        # DELETE BUTTON
         self.pushButtonDelete = QtWidgets.QPushButton(Form)
         self.pushButtonDelete.setObjectName("pushButtonDelete")
         self.verticalLayout.addWidget(self.pushButtonDelete)
         self.horizontalLayout.addLayout(self.verticalLayout)
+        self.pushButtonDelete.clicked.connect(self.remove_row)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
-        def add_item(self):
+    def add_item(self):
 
-            contador = self.tableWidget.rowCount() - 1
-            title = "Campo1"
-            campo1, ok = QInputDialog.getText(self, title, title)
-            if ok and campo1 is not None:
-                self.tableWidget.setItem(contador, 0, QTableWidgetItem(campo1))
-            title = "Campo2"
-            campo2, ok = QInputDialog.getText(self, title, title)
-            if ok and campo2 is not None:
-                self.tableWidget.setItem(contador, 1, QTableWidgetItem(campo2))
-            title = "Campo3"
-            campo3, ok = QInputDialog.getText(self, title, title)
-            if ok and campo3 is not None:
-                self.tableWidget.setItem(contador, 2, QTableWidgetItem(campo3))
-            title = "Campo4"
-            campo4, ok = QInputDialog.getText(self, title, title)
-            if ok and campo4 is not None:
-                self.tableWidget.setItem(contador, 3, QTableWidgetItem(campo4))
-            self.tableWidget.insertRow(contador + 1)
+        contador = self.tableWidget.rowCount()-1
+        title = "Campo1"
+        campo1, ok = QInputDialog.getText(self, title, title)
+        if ok and campo1 is not None:
+            self.tableWidget.setItem(contador, 0, QTableWidgetItem(campo1))
+        title = "Campo2"
+        campo2, ok = QInputDialog.getText(self, title, title)
+        if ok and campo2 is not None:
+             self.tableWidget.setItem(contador, 1, QTableWidgetItem(campo2))
+        title = "Campo3"
+        campo3, ok = QInputDialog.getText(self, title, title)
+        if ok and campo3 is not None:
+             self.tableWidget.setItem(contador, 2, QTableWidgetItem(campo3))
+        title = "Campo4"
+        campo4, ok = QInputDialog.getText(self, title, title)
+        if ok and campo4 is not None:
+            self.tableWidget.setItem(contador, 3, QTableWidgetItem(campo4))
+        self.tableWidget.insertRow(contador+1)
 
-        def edit_item(self):
-            row = self.tableWidget.currentRow()
-            col = self.tableWidget.currentColumn()
-            item = self.tableWidget.item(row, col)
 
-            if item is not None:
-                title = "Edit Item"
-                data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, item.text())
-                if ok and data is not None and data != "":
-                    self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                else:
-                    QMessageBox.warning(self, "Warning", "El valor no es valido")
+    def edit_item(self):
+        row = self.tableWidget.currentRow()
+        col = self.tableWidget.currentColumn()
+        item = self.tableWidget.item(row, col)
+
+        if item is not None:
+            title = "Edit Item"
+            data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, item.text())
+            if ok and data is not None and data != "":
+                self.tableWidget.setItem(row, col, QTableWidgetItem(data))
             else:
-                title = "Edit Item"
-                data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, "")
-                if ok and data is not None and data != "":
-                    self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                else:
-                    QMessageBox.warning(self, "Warning", "El valor no es valido")
+                QMessageBox.warning(self, "Warning", "El valor no es valido")
+        else:
+            title = "Edit Item"
+            data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, "")
+            if ok and data is not None and data != "":
+                self.tableWidget.setItem(row, col, QTableWidgetItem(data))
+            else:
+                QMessageBox.warning(self, "Warning", "El valor no es valido")
 
-        def remove_row(self):
-            row = self.tableWidget.currentRow()
+    def remove_row(self):
+        row = self.tableWidget.currentRow()
 
-            reply = QMessageBox.question(self, "Borrar Fila", "¿Quieres borrar la fila .form ?",
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(self, "Borrar Fila", "¿Quieres borrar la fila .form ?",
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
-            if reply == QMessageBox.StandardButton.Yes:
-                self.tableWidget.removeRow(row)
+        if reply == QMessageBox.StandardButton.Yes:
+            self.tableWidget.removeRow(row)
+
+    def move_row_up(self):
+        row = self.tableWidget.currentRow()
+
+        # si no hay ninguna fila seleccionada o si es la primera fila, no se puede mover hacia arriba
+        if row < 1:
+            return
+
+        # intercambiar posición de filas
+        for col in range(self.tableWidget.columnCount()):
+            temp = self.tableWidget.takeItem(row, col)
+            temp_2 = self.tableWidget.takeItem(row - 1, col)
+            self.tableWidget.setItem(row - 1, col, temp)
+            self.tableWidget.setItem(row, col, temp_2)
+
+        # seleccionar la fila movida
+        self.tableWidget.selectRow(row - 1)
+
+    def move_row_down(self):
+        row = self.tableWidget.currentRow()
+
+        # si no hay ninguna fila seleccionada o si es la última fila, no se puede mover hacia abajo
+        if row < 0 or row == self.tableWidget.rowCount() - 1:
+            return
+
+        # intercambiar posición de filas
+        for col in range(self.tableWidget.columnCount()):
+            temp = self.tableWidget.takeItem(row, col)
+            temp_2 = self.tableWidget.takeItem(row + 1, col)
+            self.tableWidget.setItem(row + 1, col, temp)
+            self.tableWidget.setItem(row, col, temp_2)
+
+        # seleccionar la fila movida
+        self.tableWidget.selectRow(row + 1)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -131,9 +183,40 @@ class Ui_Form(object):
         self.pushButtonEdit.setText(_translate("Form", "Editar"))
         self.pushButtonDelete.setText(_translate("Form", "Borrar"))
 
+    def move_row_up(self):
+        row = self.tableWidget.currentRow()
+
+        # si no hay ninguna fila seleccionada o si es la primera fila, no se puede mover hacia arriba
+        if row < 1:
+            return
+
+        # mover la fila hacia arriba
+        for col in range(self.tableWidget.columnCount()):
+            temp = self.tableWidget.takeItem(row, col)
+            self.tableWidget.setItem(row-1, col, temp)
+
+        # seleccionar la fila movida
+        self.tableWidget.selectRow(row-1)
+
+    def move_row_down(self):
+        row = self.tableWidget.currentRow()
+
+        # si no hay ninguna fila seleccionada o si es la última fila, no se puede mover hacia abajo
+        if row < 0 or row == self.tableWidget.rowCount() - 1:
+            return
+
+        # mover la fila hacia abajo
+        for col in range(self.tableWidget.columnCount()):
+            temp = self.tableWidget.takeItem(row, col)
+            self.tableWidget.setItem(row+1, col, temp)
+
+        # seleccionar la fila movida
+        self.tableWidget.selectRow(row+1)
+
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     Form = QtWidgets.QWidget()
     ui = Ui_Form()
