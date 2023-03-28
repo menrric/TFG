@@ -100,7 +100,6 @@ class Ui_Form(QDialog):
         self.tableWidget.insertRow(cell + 1)
 
 
-
     '''EDIR_ROW 
     edit_row is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
      button
