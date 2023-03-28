@@ -89,24 +89,16 @@ class Ui_Form(QDialog):
     '''
     def add_row(self):
 
-        contador = self.tableWidget.rowCount()-1
-        title = "Campo1"
-        campo1, ok = QInputDialog.getText(self, title, title)
-        if ok and campo1 is not None:
-            self.tableWidget.setItem(contador, 0, QTableWidgetItem(campo1))
-        title = "Campo2"
-        campo2, ok = QInputDialog.getText(self, title, title)
-        if ok and campo2 is not None:
-             self.tableWidget.setItem(contador, 1, QTableWidgetItem(campo2))
-        title = "Campo3"
-        campo3, ok = QInputDialog.getText(self, title, title)
-        if ok and campo3 is not None:
-             self.tableWidget.setItem(contador, 2, QTableWidgetItem(campo3))
-        title = "Campo4"
-        campo4, ok = QInputDialog.getText(self, title, title)
-        if ok and campo4 is not None:
-            self.tableWidget.setItem(contador, 3, QTableWidgetItem(campo4))
-        self.tableWidget.insertRow(contador+1)
+        cell = self.tableWidget.rowCount()-1
+        for col in range(self.tableWidget.columnCount()):
+
+            title = "Campo" + str(col)
+            campo1, ok = QInputDialog.getText(self, title, title)
+            if ok and campo1 is not None:
+                self.tableWidget.setItem(cell, col, QTableWidgetItem(campo1))
+            print(cell)
+        self.tableWidget.insertRow(cell + 1)
+
 
 
     '''EDIR_ROW 
