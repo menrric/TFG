@@ -10,6 +10,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox, QTableWidgetItem
 
 
+
 class Ui_Form(QDialog):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -43,9 +44,9 @@ class Ui_Form(QDialog):
         self.pushButtonUp.setIcon(icon)
         self.pushButtonUp.setObjectName("pushButtonUp")
         self.verticalLayout.addWidget(self.pushButtonUp)
-        self.pushButtonUp.clicked.connect(self.move_row_up)
+        self.pushButtonUp.clicked.connect(self.swap_row_up)
 
-
+        #DOWN ROW BUTTON
         self.pushButtonDown = QtWidgets.QPushButton(Form)
         self.pushButtonDown.setText("")
         icon1 = QtGui.QIcon()
@@ -53,8 +54,9 @@ class Ui_Form(QDialog):
         self.pushButtonDown.setIcon(icon1)
         self.pushButtonDown.setObjectName("pushButtonDown")
         self.verticalLayout.addWidget(self.pushButtonDown)
-        self.pushButtonDown.clicked.connect(self.move_row_down)
+        self.pushButtonDown.clicked.connect(self.swap_row_down)
 
+        #SPACE LINES
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                            QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout.addItem(spacerItem)
@@ -63,7 +65,7 @@ class Ui_Form(QDialog):
         self.pushButtonAdd = QtWidgets.QPushButton(Form)
         self.pushButtonAdd.setObjectName("pushButtonAdd")
         self.verticalLayout.addWidget(self.pushButtonAdd)
-        self.pushButtonAdd.clicked.connect(self.add_item)
+        self.pushButtonAdd.clicked.connect(self.add_row)
 
         # EDIT BUTTON
         self.pushButtonEdit = QtWidgets.QPushButton(Form)
@@ -81,7 +83,11 @@ class Ui_Form(QDialog):
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
-    def add_item(self):
+    '''ADD_ROW 
+    add_row is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
+    to put in each field.
+    '''
+    def add_row(self):
 
         contador = self.tableWidget.rowCount()-1
         title = "Campo1"
@@ -103,6 +109,10 @@ class Ui_Form(QDialog):
         self.tableWidget.insertRow(contador+1)
 
 
+    '''EDIR_ROW 
+    edit_row is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
+     button
+    '''
     def edit_item(self):
         row = self.tableWidget.currentRow()
         col = self.tableWidget.currentColumn()
@@ -123,6 +133,11 @@ class Ui_Form(QDialog):
             else:
                 QMessageBox.warning(self, "Warning", "El valor no es valido")
 
+    '''REMOVE_ROW 
+    remove_row is used to delete a specific row. To do this we must click it, hit the delete button and we will get
+     a confirmation message
+     button
+    '''
     def remove_row(self):
         row = self.tableWidget.currentRow()
 
@@ -132,39 +147,37 @@ class Ui_Form(QDialog):
         if reply == QMessageBox.StandardButton.Yes:
             self.tableWidget.removeRow(row)
 
-    def move_row_up(self):
-        row = self.tableWidget.currentRow()
-
-        # si no hay ninguna fila seleccionada o si es la primera fila, no se puede mover hacia arriba
-        if row < 1:
-            return
-
-        # intercambiar posición de filas
+    '''SWAP_ROWS 
+    swap_rows is used to swap two rows, which have to be passed as an argument. In this project, it is used to be called
+    in the swap_row_up and swap_row_down functions.
+    '''
+    def swap_rows(self, row1, row2):
         for col in range(self.tableWidget.columnCount()):
-            temp = self.tableWidget.takeItem(row, col)
-            temp_2 = self.tableWidget.takeItem(row - 1, col)
-            self.tableWidget.setItem(row - 1, col, temp)
-            self.tableWidget.setItem(row, col, temp_2)
+            item1 = self.tableWidget.takeItem(row1, col)
+            item2 = self.tableWidget.takeItem(row2, col)
+            self.tableWidget.setItem(row1, col, item2)
+            self.tableWidget.setItem(row2, col, item1)
 
-        # seleccionar la fila movida
-        self.tableWidget.selectRow(row - 1)
-
-    def move_row_down(self):
+    '''SWAP_ROW_UP 
+    Swap the selected row with the row above
+    '''
+    def swap_row_up(self):
         row = self.tableWidget.currentRow()
+        if row > 0:
+            self.swap_rows(row, row - 1)
+            self.tableWidget.setCurrentCell(row - 1, 0)
 
-        # si no hay ninguna fila seleccionada o si es la última fila, no se puede mover hacia abajo
-        if row < 0 or row == self.tableWidget.rowCount() - 1:
-            return
 
-        # intercambiar posición de filas
-        for col in range(self.tableWidget.columnCount()):
-            temp = self.tableWidget.takeItem(row, col)
-            temp_2 = self.tableWidget.takeItem(row + 1, col)
-            self.tableWidget.setItem(row + 1, col, temp)
-            self.tableWidget.setItem(row, col, temp_2)
+    '''SWAP_ROW_UP 
+    Swap the selected row with the row below
+    '''
+    def swap_row_down(self):
+        row = self.tableWidget.currentRow()
+        if row < self.tableWidget.rowCount() - 1:
+            self.swap_rows(row, row + 1)
+            self.tableWidget.setCurrentCell(row + 1, 0)
 
-        # seleccionar la fila movida
-        self.tableWidget.selectRow(row + 1)
+
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -183,35 +196,6 @@ class Ui_Form(QDialog):
         self.pushButtonEdit.setText(_translate("Form", "Editar"))
         self.pushButtonDelete.setText(_translate("Form", "Borrar"))
 
-    def move_row_up(self):
-        row = self.tableWidget.currentRow()
-
-        # si no hay ninguna fila seleccionada o si es la primera fila, no se puede mover hacia arriba
-        if row < 1:
-            return
-
-        # mover la fila hacia arriba
-        for col in range(self.tableWidget.columnCount()):
-            temp = self.tableWidget.takeItem(row, col)
-            self.tableWidget.setItem(row-1, col, temp)
-
-        # seleccionar la fila movida
-        self.tableWidget.selectRow(row-1)
-
-    def move_row_down(self):
-        row = self.tableWidget.currentRow()
-
-        # si no hay ninguna fila seleccionada o si es la última fila, no se puede mover hacia abajo
-        if row < 0 or row == self.tableWidget.rowCount() - 1:
-            return
-
-        # mover la fila hacia abajo
-        for col in range(self.tableWidget.columnCount()):
-            temp = self.tableWidget.takeItem(row, col)
-            self.tableWidget.setItem(row+1, col, temp)
-
-        # seleccionar la fila movida
-        self.tableWidget.selectRow(row+1)
 
 
 if __name__ == "__main__":
