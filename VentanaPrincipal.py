@@ -8,10 +8,17 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMessageBox, QDialog
-from ConfiguracionClasificador import Ui_Form
+from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 
 
 class Ui_MainWindow(QDialog):
+    def openConfClasi(self):
+        self.confClasi = QtWidgets.QDialog()
+        self.ui = Ui_ConfiguracionClasificador()
+        self.ui.setupUi(self.confClasi)
+        self.confClasi.show()
+
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(576, 391)
@@ -77,11 +84,6 @@ class Ui_MainWindow(QDialog):
             self.ruta=data
             self.ConfClasi.setEnabled(bool(self.ruta))
 
-    def openConfClasi(self):
-        # Crear una instancia de ConfiguracionClasificador y mostrarla
-        self.config_clasif = Ui_Form()
-        self.config_clasif.setupUi(QtWidgets.QDialog())
-        self.config_clasif.show()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

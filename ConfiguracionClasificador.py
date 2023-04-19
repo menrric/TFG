@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'SegundaInterfaz.ui'
+# Form implementation generated from reading ui file 'ConfiguracionClasificador.ui'
 #
 # Created by: PyQt6 UI code generator 6.3.1
 #
@@ -11,13 +11,15 @@ from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox, QTabl
 
 
 
-class Ui_Form(QDialog):
-    def setupUi(self, Form):
-        Form.setObjectName("Form")
-        Form.resize(577, 391)
-        self.horizontalLayout = QtWidgets.QHBoxLayout(Form)
+class Ui_ConfiguracionClasificador(QDialog):
+    def setupUi(self, ConfiguracionClasificador):
+
+
+        ConfiguracionClasificador.setObjectName("ConfiguracionClasificador")
+        ConfiguracionClasificador.resize(577, 391)
+        self.horizontalLayout = QtWidgets.QHBoxLayout(ConfiguracionClasificador)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.tableWidget = QtWidgets.QTableWidget(Form)
+        self.tableWidget = QtWidgets.QTableWidget(ConfiguracionClasificador)
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(4)
         self.tableWidget.setRowCount(1)
@@ -37,7 +39,7 @@ class Ui_Form(QDialog):
 
 
         #UP ROW BUTTON
-        self.pushButtonUp = QtWidgets.QPushButton(Form)
+        self.pushButtonUp = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonUp.setText("")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("FlechaArriba.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
@@ -47,7 +49,7 @@ class Ui_Form(QDialog):
         self.pushButtonUp.clicked.connect(self.swap_row_up)
 
         #DOWN ROW BUTTON
-        self.pushButtonDown = QtWidgets.QPushButton(Form)
+        self.pushButtonDown = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonDown.setText("")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap("FlechaAbajo.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
@@ -62,26 +64,26 @@ class Ui_Form(QDialog):
         self.verticalLayout.addItem(spacerItem)
 
         # ADD BUTTON
-        self.pushButtonAdd = QtWidgets.QPushButton(Form)
+        self.pushButtonAdd = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonAdd.setObjectName("pushButtonAdd")
         self.verticalLayout.addWidget(self.pushButtonAdd)
         self.pushButtonAdd.clicked.connect(self.add_row)
 
         # EDIT BUTTON
-        self.pushButtonEdit = QtWidgets.QPushButton(Form)
+        self.pushButtonEdit = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonEdit.setObjectName("pushButtonEdit")
         self.verticalLayout.addWidget(self.pushButtonEdit)
         self.pushButtonEdit.clicked.connect(self.edit_item)
 
         # DELETE BUTTON
-        self.pushButtonDelete = QtWidgets.QPushButton(Form)
+        self.pushButtonDelete = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonDelete.setObjectName("pushButtonDelete")
         self.verticalLayout.addWidget(self.pushButtonDelete)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.pushButtonDelete.clicked.connect(self.remove_row)
 
-        self.retranslateUi(Form)
-        QtCore.QMetaObject.connectSlotsByName(Form)
+        self.retranslateUi(ConfiguracionClasificador)
+        QtCore.QMetaObject.connectSlotsByName(ConfiguracionClasificador)
 
     '''ADD_ROW 
     add_row is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
@@ -96,7 +98,6 @@ class Ui_Form(QDialog):
             campo1, ok = QInputDialog.getText(self, title, title)
             if ok and campo1 is not None:
                 self.tableWidget.setItem(cell, col, QTableWidgetItem(campo1))
-            print(cell)
         self.tableWidget.insertRow(cell + 1)
 
 
@@ -132,7 +133,7 @@ class Ui_Form(QDialog):
     def remove_row(self):
         row = self.tableWidget.currentRow()
 
-        reply = QMessageBox.question(self, "Borrar Fila", "¿Quieres borrar la fila .form ?",
+        reply = QMessageBox.question(self, "Borrar Fila", "¿Quieres borrar la fila {}?".format(row +1) ,
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
 
         if reply == QMessageBox.StandardButton.Yes:
@@ -170,22 +171,22 @@ class Ui_Form(QDialog):
 
 
 
-    def retranslateUi(self, Form):
+    def retranslateUi(self, ConfiguracionClasificador):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        ConfiguracionClasificador.setWindowTitle(_translate("ConfiguracionClasificador", "ConfiguracionClasificador"))
         item = self.tableWidget.verticalHeaderItem(0)
-        item.setText(_translate("Form", "1"))
+        item.setText(_translate("ConfiguracionClasificador", "1"))
         item = self.tableWidget.horizontalHeaderItem(0)
-        item.setText(_translate("Form", "Nº Capa"))
+        item.setText(_translate("ConfiguracionClasificador", "Nº Capa"))
         item = self.tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("Form", "Seg Columna"))
+        item.setText(_translate("ConfiguracionClasificador", "Seg Columna"))
         item = self.tableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("Form", "Cuarta Columna"))
+        item.setText(_translate("ConfiguracionClasificador", "Cuarta Columna"))
         item = self.tableWidget.horizontalHeaderItem(3)
-        item.setText(_translate("Form", "Nueva columna"))
-        self.pushButtonAdd.setText(_translate("Form", "Añadir"))
-        self.pushButtonEdit.setText(_translate("Form", "Editar"))
-        self.pushButtonDelete.setText(_translate("Form", "Borrar"))
+        item.setText(_translate("ConfiguracionClasificador", "Nueva columna"))
+        self.pushButtonAdd.setText(_translate("ConfiguracionClasificador", "Añadir"))
+        self.pushButtonEdit.setText(_translate("ConfiguracionClasificador", "Editar"))
+        self.pushButtonDelete.setText(_translate("ConfiguracionClasificador", "Borrar"))
 
 
 
@@ -193,8 +194,8 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
+    ConfiguracionClasificador = QtWidgets.QDialog()
+    ui = Ui_ConfiguracionClasificador()
+    ui.setupUi(ConfiguracionClasificador)
+    ConfiguracionClasificador.show()
     sys.exit(app.exec())
