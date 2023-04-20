@@ -12,11 +12,6 @@ from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 
 
 class Ui_MainWindow(QDialog):
-    def openConfClasi(self):
-        self.confClasi = QtWidgets.QDialog()
-        self.ui = Ui_ConfiguracionClasificador()
-        self.ui.setupUi(self.confClasi)
-        self.confClasi.show()
 
 
     def setupUi(self, MainWindow):
@@ -24,7 +19,6 @@ class Ui_MainWindow(QDialog):
         MainWindow.resize(576, 391)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(670, 560, 75, 23))
         self.pushButton.setObjectName("pushButton")
@@ -35,31 +29,36 @@ class Ui_MainWindow(QDialog):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
 
+        #Input path and bouton
         self.ruta=""
         self.RInput = QtWidgets.QPushButton(self.widget)
         self.RInput.setObjectName("RInput")
         self.verticalLayout.addWidget(self.RInput)
         self.RInput.clicked.connect(self.inputPath)
 
+        #ConfPreproc button
         self.ConfPreproc = QtWidgets.QPushButton(self.widget)
         self.ConfPreproc.setObjectName("ConfPreproc")
         self.verticalLayout.addWidget(self.ConfPreproc)
 
+        #ConfiguracionClasificador button
         self.ConfClasi = QtWidgets.QPushButton(self.widget)
         self.ConfClasi.setObjectName("ConfClasi")
         self.verticalLayout.addWidget(self.ConfClasi)
         self.ConfClasi.setEnabled(bool(self.ruta))
         self.ConfClasi.clicked.connect(self.openConfClasi)
 
-
+        #ConfBat button
         self.ConfBat = QtWidgets.QPushButton(self.widget)
         self.ConfBat.setObjectName("ConfBat")
         self.verticalLayout.addWidget(self.ConfBat)
 
+        #EjecButton
         self.IniEjec = QtWidgets.QPushButton(self.widget)
         self.IniEjec.setObjectName("IniEjec")
         self.verticalLayout.addWidget(self.IniEjec)
 
+        #Grafic button
         self.Grafic = QtWidgets.QPushButton(self.widget)
         self.Grafic.setObjectName("Grafic")
         self.verticalLayout.addWidget(self.Grafic)
@@ -78,11 +77,24 @@ class Ui_MainWindow(QDialog):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 
+    '''
+    Function created to indicate the input path of the files
+    '''
     def inputPath(self):
         data, ok = QInputDialog.getText(self, "Ruta Input", "Indique la ruta donde se encuentra el input", QLineEdit.EchoMode.Normal, self.ruta)
         if ok and data is not None and data != "":
             self.ruta=data
             self.ConfClasi.setEnabled(bool(self.ruta))
+
+    '''
+    Function that opens the ConfiguracionClasificador window when its button is selected
+    '''
+    def openConfClasi(self):
+        self.confClasi = QtWidgets.QDialog()
+        self.ui = Ui_ConfiguracionClasificador()
+        self.ui.setupUi(self.confClasi)
+        self.confClasi.show()
+
 
 
     def retranslateUi(self, MainWindow):

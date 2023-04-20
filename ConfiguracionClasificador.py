@@ -85,7 +85,8 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.retranslateUi(ConfiguracionClasificador)
         QtCore.QMetaObject.connectSlotsByName(ConfiguracionClasificador)
 
-    '''ADD_ROW 
+    '''
+    ADD_ROW 
     add_row is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
     to put in each field.
     '''
@@ -101,9 +102,10 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.tableWidget.insertRow(cell + 1)
 
 
-    '''EDIR_ROW 
+    '''
+    EDIT_ROW 
     edit_row is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
-     button
+    button
     '''
     def edit_item(self):
         row = self.tableWidget.currentRow()
@@ -125,10 +127,11 @@ class Ui_ConfiguracionClasificador(QDialog):
             else:
                 QMessageBox.warning(self, "Warning", "El valor no es valido")
 
-    '''REMOVE_ROW 
+    '''
+    REMOVE_ROW 
     remove_row is used to delete a specific row. To do this we must click it, hit the delete button and we will get
-     a confirmation message
-     button
+    a confirmation message
+    button
     '''
     def remove_row(self):
         row = self.tableWidget.currentRow()
@@ -150,7 +153,8 @@ class Ui_ConfiguracionClasificador(QDialog):
             self.tableWidget.setItem(row1, col, item2)
             self.tableWidget.setItem(row2, col, item1)
 
-    '''SWAP_ROW_UP 
+    '''
+    SWAP_ROW_UP 
     Swap the selected row with the row above
     '''
     def swap_row_up(self):
@@ -160,7 +164,8 @@ class Ui_ConfiguracionClasificador(QDialog):
             self.tableWidget.setCurrentCell(row - 1, 0)
 
 
-    '''SWAP_ROW_UP 
+    '''
+    SWAP_ROW_UP 
     Swap the selected row with the row below
     '''
     def swap_row_down(self):
