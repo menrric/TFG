@@ -37,9 +37,11 @@ class Ui_MainWindow(QDialog):
         self.RInput.clicked.connect(self.inputPath)
 
         #ConfPreproc button
-        self.ConfPreproc = QtWidgets.QPushButton(self.widget)
-        self.ConfPreproc.setObjectName("ConfPreproc")
-        self.verticalLayout.addWidget(self.ConfPreproc)
+        self.ROutput = QtWidgets.QPushButton(self.widget)
+        self.ROutput.setObjectName("ROutput")
+        self.verticalLayout.addWidget(self.ROutput)
+        self.ROutput.clicked.connect(self.outputPath)
+
 
         #ConfiguracionClasificador button
         self.ConfClasi = QtWidgets.QPushButton(self.widget)
@@ -62,6 +64,7 @@ class Ui_MainWindow(QDialog):
         self.Grafic = QtWidgets.QPushButton(self.widget)
         self.Grafic.setObjectName("Grafic")
         self.verticalLayout.addWidget(self.Grafic)
+        self.Grafic.setEnabled(bool(self.ruta))
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -87,6 +90,15 @@ class Ui_MainWindow(QDialog):
             self.ConfClasi.setEnabled(bool(self.ruta))
 
     '''
+    Function created to indicate where to save the output  files
+    '''
+    def outputPath(self):
+        data, ok = QInputDialog.getText(self, "Ruta Input", "Indique donde almacenar el fichero de salida", QLineEdit.EchoMode.Normal, self.ruta)
+        if ok and data is not None and data != "":
+            self.ruta=data
+            self.Grafic.setEnabled(bool(self.ruta))
+
+    '''
     Function that opens the ConfiguracionClasificador window when its button is selected
     '''
     def openConfClasi(self):
@@ -101,8 +113,8 @@ class Ui_MainWindow(QDialog):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton.setText(_translate("MainWindow", "PushButton"))
-        self.RInput.setText(_translate("MainWindow", "RutaInput"))
-        self.ConfPreproc.setText(_translate("MainWindow", "Configurar preprocesamiento"))
+        self.RInput.setText(_translate("MainWindow", "Ruta Input"))
+        self.ROutput.setText(_translate("MainWindow", "Ruta Output"))
         self.ConfClasi.setText(_translate("MainWindow", "Configurar clasificador"))
         self.ConfBat.setText(_translate("MainWindow", "Configurar bateria"))
         self.IniEjec.setText(_translate("MainWindow", "Inicio ejecución"))
