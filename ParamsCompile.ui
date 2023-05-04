@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ParamCompile</class>
+ <widget class="QDialog" name="ParamCompile">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>537</width>
+    <height>59</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>531</width>
+     <height>241</height>
+    </rect>
+   </property>
+   <property name="midLineWidth">
+    <number>0</number>
+   </property>
+   <property name="sizeAdjustPolicy">
+    <enum>QAbstractScrollArea::AdjustIgnored</enum>
+   </property>
+   <property name="gridStyle">
+    <enum>Qt::SolidLine</enum>
+   </property>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>150</number>
+   </attribute>
+   <row>
+    <property name="text">
+     <string>Parametros</string>
+    </property>
+   </row>
+   <column>
+    <property name="text">
+     <string>Función Loss</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Optimizers</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Epocas</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QComboBox" name="comboBoxLoss">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>30</y>
+     <width>131</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>mean_squared_error</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>categorical_crossentropy</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>binary_crossentropy</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>mean_absolute_error</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>kullback_leibler_divergence</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>mean_squared_logarithmic_error</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QComboBox" name="comboBoxOptimizers">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>30</y>
+     <width>91</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>SGD</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>RMSprop</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Adam</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLineEdit" name="lineEditEpocas">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>30</y>
+     <width>121</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

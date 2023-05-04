@@ -39,7 +39,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonUp.setIcon(icon)
         self.pushButtonUp.setObjectName("pushButtonUp")
         self.verticalLayout.addWidget(self.pushButtonUp)
-        self.pushButtonUp.clicked.connect(self.swap_row_up)
+        self.pushButtonUp.clicked.connect(self.swapRowUp)
 
         #DOWN ROW BUTTON
         self.pushButtonDown = QtWidgets.QPushButton(ConfiguracionClasificador)
@@ -49,7 +49,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonDown.setIcon(icon1)
         self.pushButtonDown.setObjectName("pushButtonDown")
         self.verticalLayout.addWidget(self.pushButtonDown)
-        self.pushButtonDown.clicked.connect(self.swap_row_down)
+        self.pushButtonDown.clicked.connect(self.swapRowDown)
 
         #SPACE LINES
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
@@ -60,30 +60,30 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonAdd = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonAdd.setObjectName("pushButtonAdd")
         self.verticalLayout.addWidget(self.pushButtonAdd)
-        self.pushButtonAdd.clicked.connect(self.add_row)
+        self.pushButtonAdd.clicked.connect(self.addRow)
 
         # EDIT BUTTON
         self.pushButtonEdit = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonEdit.setObjectName("pushButtonEdit")
         self.verticalLayout.addWidget(self.pushButtonEdit)
-        self.pushButtonEdit.clicked.connect(self.edit_item)
+        self.pushButtonEdit.clicked.connect(self.editItem)
 
         # DELETE BUTTON
         self.pushButtonDelete = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonDelete.setObjectName("pushButtonDelete")
         self.verticalLayout.addWidget(self.pushButtonDelete)
         self.horizontalLayout.addLayout(self.verticalLayout)
-        self.pushButtonDelete.clicked.connect(self.remove_row)
+        self.pushButtonDelete.clicked.connect(self.removeRow)
 
         self.retranslateUi(ConfiguracionClasificador)
         QtCore.QMetaObject.connectSlotsByName(ConfiguracionClasificador)
 
     '''
-    ADD_ROW 
-    add_row is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
+    ADDROW 
+    addRow is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
     to put in each field.
     '''
-    def add_row(self):
+    def addRow(self):
 
         lista= {}
         cell = self.tableWidget.rowCount()-1
@@ -101,11 +101,11 @@ class Ui_ConfiguracionClasificador(QDialog):
 
 
     '''
-    EDIT_ROW 
-    edit_row is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
+    EDITITEM
+    editItem is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
     button
     '''
-    def edit_item(self):
+    def editItem(self):
         row = self.tableWidget.currentRow()
         col = self.tableWidget.currentColumn()
         item = self.tableWidget.item(row, col)
@@ -127,15 +127,14 @@ class Ui_ConfiguracionClasificador(QDialog):
                 self.dicCapas[row+1][header]=data
             else:
                 QMessageBox.warning(self, "Warning", "El valor no es valido")
-        print(self.dicCapas)
 
     '''
-    REMOVE_ROW 
-    remove_row is used to delete a specific row. To do this we must click it, hit the delete button and we will get
+    REMOVEROW 
+    removeRow is used to delete a specific row. To do this we must click it, hit the delete button and we will get
     a confirmation message
     button
     '''
-    def remove_row(self):
+    def removeRow(self):
         row = self.tableWidget.currentRow()
 
         reply = QMessageBox.question(self, "Borrar Fila", "¿Quieres borrar la fila {}?".format(row +1) ,
@@ -144,11 +143,11 @@ class Ui_ConfiguracionClasificador(QDialog):
         if reply == QMessageBox.StandardButton.Yes:
             self.tableWidget.removeRow(row)
 
-    '''SWAP_ROWS 
-    swap_rows is used to swap two rows, which have to be passed as an argument. In this project, it is used to be called
-    in the swap_row_up and swap_row_down functions.
+    '''SWAPROWS 
+    swaprRows is used to swap two rows, which have to be passed as an argument. In this project, it is used to be called
+    in the swapRowUp and swapRowDown functions.
     '''
-    def swap_rows(self, row1, row2):
+    def swapRows(self, row1, row2):
         for col in range(self.tableWidget.columnCount()):
             item1 = self.tableWidget.takeItem(row1, col)
             item2 = self.tableWidget.takeItem(row2, col)
@@ -158,24 +157,24 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.dicCapas[row1 + 1], self.dicCapas[row2 + 1] = self.dicCapas[row2 + 1], self.dicCapas[row1 + 1]
 
     '''
-    SWAP_ROW_UP 
+    SWAPROWUP 
     Swap the selected row with the row above
     '''
-    def swap_row_up(self):
+    def swapRowUp(self):
         row = self.tableWidget.currentRow()
         if row > 0:
-            self.swap_rows(row, row - 1)
+            self.swapRows(row, row - 1)
             self.tableWidget.setCurrentCell(row - 1, 0)
 
 
     '''
-    SWAP_ROW_UP 
+    SWAPROWUP 
     Swap the selected row with the row below
     '''
-    def swap_row_down(self):
+    def swapRowDown(self):
         row = self.tableWidget.currentRow()
         if row < self.tableWidget.rowCount() - 1:
-            self.swap_rows(row, row + 1)
+            self.swapRows(row, row + 1)
             self.tableWidget.setCurrentCell(row + 1, 0)
 
 
@@ -186,13 +185,13 @@ class Ui_ConfiguracionClasificador(QDialog):
         item = self.tableWidget.verticalHeaderItem(0)
         item.setText(_translate("ConfiguracionClasificador", "1"))
         item = self.tableWidget.horizontalHeaderItem(0)
-        item.setText(_translate("ConfiguracionClasificador", "Nombre"))
+        item.setText(_translate("ConfiguracionClasificador", "nombre"))
         item = self.tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("ConfiguracionClasificador", "Tipo"))
+        item.setText(_translate("ConfiguracionClasificador", "tipo"))
         item = self.tableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("ConfiguracionClasificador", "NEP"))
+        item.setText(_translate("ConfiguracionClasificador", "nep"))
         item = self.tableWidget.horizontalHeaderItem(3)
-        item.setText(_translate("ConfiguracionClasificador", "Activación"))
+        item.setText(_translate("ConfiguracionClasificador", "activacion"))
         self.pushButtonAdd.setText(_translate("ConfiguracionClasificador", "Añadir"))
         self.pushButtonEdit.setText(_translate("ConfiguracionClasificador", "Editar"))
         self.pushButtonDelete.setText(_translate("ConfiguracionClasificador", "Borrar"))
