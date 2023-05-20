@@ -3,6 +3,7 @@ import subprocess
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMessageBox, QDialog
 from ConfiguracionClasificador import Ui_ConfiguracionClasificador
+from ParamCompile import Ui_ParamCompile
 
 
 import errno
@@ -17,7 +18,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 import os
-
 from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER
 
 
@@ -44,13 +44,13 @@ class Ui_MainWindow(QDialog):
 
         #Input path and bouton
         self.ruta=""
-        self.rutaOutput=""
         self.RInput = QtWidgets.QPushButton(self.widget)
         self.RInput.setObjectName("RInput")
         self.verticalLayout.addWidget(self.RInput)
         self.RInput.clicked.connect(self.inputPath)
 
         #ConfPreproc button
+        self.rutaOutput=""
         self.ROutput = QtWidgets.QPushButton(self.widget)
         self.ROutput.setObjectName("ROutput")
         self.verticalLayout.addWidget(self.ROutput)
@@ -65,9 +65,14 @@ class Ui_MainWindow(QDialog):
         self.ConfClasi.clicked.connect(self.openConfClasi)
 
         #ConfBat button
-        self.ConfBat = QtWidgets.QPushButton(self.widget)
-        self.ConfBat.setObjectName("ConfBat")
-        self.verticalLayout.addWidget(self.ConfBat)
+        self.loss = None
+        self.optimize = None
+        self.epocas = None
+        self.ConfParamCompile = QtWidgets.QPushButton(self.widget)
+        self.ConfParamCompile.setObjectName("Configurar Parametros Compile")
+        self.verticalLayout.addWidget(self.ConfParamCompile)
+        self.ConfParamCompile.clicked.connect(self.openParamsCopile)
+
 
         #EjecButton
         self.IniEjec = QtWidgets.QPushButton(self.widget)
@@ -121,12 +126,29 @@ class Ui_MainWindow(QDialog):
         self.ui = Ui_ConfiguracionClasificador()
         self.ui.setupUi(self.confClasi)
         self.confClasi.show()
-        self.confClasi.rejected.connect(self.guardarDiccionario)
+        self.confClasi.rejected.connect(self.saveDiccionario)
         self.confClasi.show()
 
-    def guardarDiccionario(self):
+    def saveDiccionario(self):
         self.diccionario = self.ui.dicCapas
         print(self.diccionario)
+
+    def openParamsCopile(self):
+        self.ConfParamCompile = QtWidgets.QDialog()
+        self.uiParams = Ui_ParamCompile()
+        self.uiParams.setupUiParams(self.ConfParamCompile)
+        self.ConfParamCompile.show()
+        self.ConfParamCompile.rejected.connect(self.saveParamsCompile)
+        self.ConfParamCompile.show()
+
+    def saveParamsCompile(self):
+        self.loss = self.uiParams.loss
+        print(self.loss)
+        self.optimize = self.uiParams.optimize
+        print(self.optimize)
+        self.epocas = self.uiParams.epocas
+        print(self.epocas)
+
 
     def iniciarEjec(self):
         list_of_dicts = []
@@ -153,7 +175,7 @@ class Ui_MainWindow(QDialog):
         X_train = X_train.reshape(-1, 240)
         X_test = X_test.reshape(-1, 240)
 
-        EPOCAS = 5
+        EPOCAS = self.epocas
 
         MetaModelo = list_of_dicts
 
@@ -209,7 +231,7 @@ class Ui_MainWindow(QDialog):
                     modeloMLP.add(Dense(int(capa['nep']), activation=capa['activacion'], name=capa['nombre']))
                 PrimeraCapaOculta = False
 
-            modeloMLP.compile(loss='binary_crossentropy', optimizer="adam", metrics=['accuracy'])
+            modeloMLP.compile(loss=self.loss, optimizer=self.optimize, metrics=['accuracy'])
             # modeloMLP.summary()
 
             pathDir = self.rutaOutput + "/Experimentos/" + str(i)
@@ -243,6 +265,8 @@ class Ui_MainWindow(QDialog):
             print("Finaliza EER = ", EER)
             i = i + 1
 
+        print("Fin de la ejecucion")
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -251,7 +275,7 @@ class Ui_MainWindow(QDialog):
         self.RInput.setText(_translate("MainWindow", "Ruta Input"))
         self.ROutput.setText(_translate("MainWindow", "Ruta Output"))
         self.ConfClasi.setText(_translate("MainWindow", "Configurar clasificador"))
-        self.ConfBat.setText(_translate("MainWindow", "Configurar bateria"))
+        self.ConfParamCompile.setText(_translate("MainWindow", "Parametros del Compile"))
         self.IniEjec.setText(_translate("MainWindow", "Inicio ejecución"))
         self.Grafic.setText(_translate("MainWindow", "Graficas"))
 
