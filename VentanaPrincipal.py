@@ -2,6 +2,7 @@ import subprocess
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMessageBox, QDialog
+from PyQt6.QtGui import QFont
 from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 from ParamCompile import Ui_ParamCompile
 
@@ -18,6 +19,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 import os
+from xml.dom.minidom import parseString
+from dicttoxml import dicttoxml
+import xmltodict
+import pprint
+
 from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER
 
 
@@ -26,7 +32,7 @@ class Ui_MainWindow(QDialog):
 
     def setupUi(self, MainWindow):
 
-        self.diccionario={}
+        self.diccionario = {}
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(576, 391)
@@ -36,7 +42,7 @@ class Ui_MainWindow(QDialog):
         self.pushButton.setGeometry(QtCore.QRect(670, 560, 75, 23))
         self.pushButton.setObjectName("pushButton")
         self.widget = QtWidgets.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(385, 200, 170, 170))
+        self.widget.setGeometry(QtCore.QRect(20, 80, 150, 170))
         self.widget.setObjectName("widget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.widget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -64,7 +70,7 @@ class Ui_MainWindow(QDialog):
         self.ConfClasi.setEnabled(bool(self.ruta))
         self.ConfClasi.clicked.connect(self.openConfClasi)
 
-        #ConfBat button
+        #ConfParamCompile button
         self.loss = None
         self.optimize = None
         self.epocas = None
@@ -86,6 +92,12 @@ class Ui_MainWindow(QDialog):
         self.verticalLayout.addWidget(self.Grafic)
         self.Grafic.setEnabled(bool(self.rutaOutput))
 
+        self.textLoger = QtWidgets.QTextEdit(parent=self.centralwidget)
+        self.textLoger.setGeometry(QtCore.QRect(200, 40, 321, 271))
+        self.textLoger.setObjectName("textLoger")
+        self.textLoger.textChanged.connect(self.updateTextLoger)
+
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 576, 21))
@@ -99,6 +111,11 @@ class Ui_MainWindow(QDialog):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        self.textLoger.append('<font size="10"><center><b>Bienvenido.</b></center></font size="10">'
+                              '\n\n Por favor, para empezar introduzca las rutas de input y output, '
+                              'después configure el clasificador y los parametros del compilador y luego inicie la ejecución')
+
+
 
     '''
     Function created to indicate the input path of the files
@@ -108,6 +125,9 @@ class Ui_MainWindow(QDialog):
         if ok and data is not None and data != "":
             self.ruta=data
             self.ConfClasi.setEnabled(bool(self.ruta))
+        self.textLoger.clear()
+        self.textLoger.append('<u>La ruta de input proporcionada es: </u><br> '
+                              '<b>' + self.ruta + '</b><br>')
 
     '''
     Function created to indicate where to save the output  files
@@ -117,6 +137,8 @@ class Ui_MainWindow(QDialog):
         if ok and data is not None and data != "":
             self.rutaOutput=data
             self.Grafic.setEnabled(bool(self.rutaOutput))
+        self.textLoger.append('<u>La ruta de output proporcionada es: </u><br> '
+                              '<b>' + self.rutaOutput + '</b>')
 
     '''
     Function that opens the ConfiguracionClasificador window when its button is selected
@@ -129,9 +151,16 @@ class Ui_MainWindow(QDialog):
         self.confClasi.rejected.connect(self.saveDiccionario)
         self.confClasi.show()
 
+    '''
+    Function that brings us the dictionary from the ConfiguracionClassificador window to the current 
+    window to be able to use
+     '''
     def saveDiccionario(self):
         self.diccionario = self.ui.dicCapas
         print(self.diccionario)
+    '''
+    Function that opens the ParamCompile window when its button is selected
+    '''
 
     def openParamsCopile(self):
         self.ConfParamCompile = QtWidgets.QDialog()
@@ -141,6 +170,10 @@ class Ui_MainWindow(QDialog):
         self.ConfParamCompile.rejected.connect(self.saveParamsCompile)
         self.ConfParamCompile.show()
 
+    '''
+    Function that brings us the params from the ParamCompile window to the current 
+    window to be able to use
+     '''
     def saveParamsCompile(self):
         self.loss = self.uiParams.loss
         print(self.loss)
@@ -149,9 +182,16 @@ class Ui_MainWindow(QDialog):
         self.epocas = self.uiParams.epocas
         print(self.epocas)
 
+    def updateTextLoger(self):
+        self.textLoger.repaint()  # Actualizar el contenido del objeto QTextEdit
+        QtWidgets.QApplication.processEvents()  # Actualizar la interfaz gráfica
+
+
 
     def iniciarEjec(self):
         list_of_dicts = []
+
+        self.textLoger.append("Iniciando la ejecución")
 
         for key, value in self.diccionario.items():
             temp_dict = value.copy()
@@ -242,28 +282,103 @@ class Ui_MainWindow(QDialog):
                     raise
 
             modeloMLP.save(pathDir + "/modeloMLP.mod")
-            i = i + 1
 
+            print("Modelo=", Modelo)
+            DatosDict = dict({"Modelo": Modelo, "EER": []})
+            Datos_xml = dicttoxml(DatosDict, attr_type=False)
+            dom = parseString(Datos_xml)
+
+            fpxml = open(pathDir + "/Experimento.xml", "w")
+            fpxml.write(dom.toprettyxml())
+            fpxml.close()
+
+            i = i + 1
         # Ahora vamos, modelo por modelo, entrenando y probando
 
         i = 0
+
         for Modelo in ListaModelos:
+            pathDir = self.rutaOutput +"/Experimentos/" + str(i)
             pathModelo = pathDir + "/modeloMLP.mod"
-            modelo = tf.keras.models.load_model(pathModelo)
+            EER = []
 
-            modelo.summary()
+            Repeticiones = 5
+            for repeticion in range(0, Repeticiones):
+                modelo = tf.keras.models.load_model(pathModelo)
 
-            modelo.fit(X_train, y_train, batch_size=64, epochs=EPOCAS, verbose=0)
+                modelo.compile(loss=self.loss, optimizer=self.optimize, metrics=['accuracy'])
+                modelo.fit(X_train, y_train, batch_size=64, epochs=EPOCAS, verbose=0)
 
-            Salida_red = modelo.predict(X_test)
-            Salida_red = Salida_red.reshape(-1, 1)
+                Salida_red = modelo.predict(X_test)
+                Salida_red = Salida_red.reshape(-1, 1)
 
-            # Evaluamos
+                # Evaluamos
 
-            EER = CalculaEER(Salida_red, y_test.reshape(-1, 1))
+                EER.append(CalculaEER(Salida_red, y_test.reshape(-1, 1)))
 
-            print("Finaliza EER = ", EER)
+                print("Finaliza ", i, "EER = ", EER[repeticion])
+
+            # Actualiza el fichero XML con la información del experimento
+
+                fpxml = open(pathDir + '/Experimento.xml', "r")
+                xmlDoc = fpxml.read()
+                print(xmlDoc)
+                ExperimentoDict = xmltodict.parse(xmlDoc)
+                print(ExperimentoDict)
+
+                ModeloLista = ExperimentoDict['root']['Modelo']['item']
+                print("Dict['root']['Modelo'] --->", ModeloLista)
+
+                ExperimentoDict = dict({"Modelo": ModeloLista, 'EER': EER})
+                print("Añado a la lista de capas el item EER:", ExperimentoDict)
+
+                xmlDoc = dicttoxml(ExperimentoDict, attr_type=False)
+                dom = parseString(xmlDoc)
+
+                fpxml = open(pathDir + "/Experimento.xml", "w")
+                fpxml.write(dom.toprettyxml())
+                fpxml.close()
+
             i = i + 1
+
+            pathDir = self.rutaOutput + "/Experimentos"
+
+            ResultadosLista = []
+        for subDir in next(os.walk(pathDir))[1]:
+            pathDir = self.rutaOutput + "/Experimentos/" + subDir
+            print("pathDir es "+ str(pathDir))
+            EER = []
+
+            fpxml = open(pathDir + "/Experimento.xml", "r")
+            xmlDoc = fpxml.read()
+            fpxml.close()
+            ExperimentoDict = xmltodict.parse(xmlDoc)
+            print("ExperimentoDict es "+ str(ExperimentoDict))
+            ModeloList = ExperimentoDict['root']['Modelo']['item']
+            print("ModeloList es "+ str(pathDir) + str(ModeloList))
+            nepList = []
+            activacionList = []
+            numCapas = len(ModeloList)
+            for idCapa in range(numCapas):
+                nepList.append(ModeloList[idCapa]['nep'])
+                print("nepList es "+ str(pathDir) + str(nepList))
+                activacionList.append(ModeloList[idCapa]['activacion'])
+                print("activacionList es "+ str(pathDir) + str(activacionList))
+            EERList = list(map(float, ExperimentoDict['root']['EER']['item']))
+            print("EERList es "+ str(pathDir) + str(EERList))
+
+            Fila = [nepList, activacionList, np.mean(EERList)]
+            print("Fila es "+ str(pathDir) + str(Fila))
+
+
+            ResultadosLista.append(Fila)
+            print("ResultadosLista es " + str(ResultadosLista))
+
+
+        print(ResultadosLista)
+
+        ResultadosDF = pd.DataFrame(ResultadosLista, columns=['Arquitectura', 'Activaciones', 'EER'])
+        ResultadosDF.sort_values(by='EER')
 
         print("Fin de la ejecucion")
 

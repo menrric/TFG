@@ -33,18 +33,21 @@ class Ui_ParamCompile(QDialog):
         self.comboBoxLoss = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxLoss.setGeometry(QtCore.QRect(80, 30, 131, 22))
         self.comboBoxLoss.setObjectName("comboBoxLoss")
+        self.comboBoxLoss.addItem("")
         self.comboBoxLoss.addItem("mean_squared_error")
         self.comboBoxLoss.addItem("categorical_crossentropy")
         self.comboBoxLoss.addItem("binary_crossentropy")
         self.comboBoxLoss.addItem("mean_absolute_error")
         self.comboBoxLoss.addItem("mean_squared_logarithmic_error")
         self.comboBoxLoss.addItem("kullback_leibler_divergence")
+        self.comboBoxLoss.setCurrentText("mean_squared_error")
         self.comboBoxLoss.currentTextChanged.connect(self.setLossValue)
 
 
         self.comboBoxOptimizers = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxOptimizers.setGeometry(QtCore.QRect(250, 30, 91, 22))
         self.comboBoxOptimizers.setObjectName("comboBoxOptimizers")
+        self.comboBoxOptimizers.addItem("")
         self.comboBoxOptimizers.addItem("SGD")
         self.comboBoxOptimizers.addItem("RMSprop")
         self.comboBoxOptimizers.addItem("Adam")
@@ -103,9 +106,11 @@ class Ui_ParamCompile(QDialog):
         self.comboBoxLoss.setItemText(3, _translate("ParamCompile", "mean_absolute_error"))
         self.comboBoxLoss.setItemText(4, _translate("ParamCompile", "mean_squared_logarithmic_error"))
         self.comboBoxLoss.setItemText(5, _translate("ParamCompile", "kullback_leibler_divergence"))
+        self.comboBoxLoss.setCurrentText("mean_squared_error")
         self.comboBoxOptimizers.setItemText(0, _translate("ParamCompile", "SGD"))
         self.comboBoxOptimizers.setItemText(1, _translate("ParamCompile", "RMSprop"))
         self.comboBoxOptimizers.setItemText(2, _translate("ParamCompile", "Adam"))
+        self.comboBoxOptimizers.setCurrentText("SGD")
 
 
 if __name__ == "__main__":
