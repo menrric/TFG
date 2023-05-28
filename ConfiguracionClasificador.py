@@ -96,7 +96,6 @@ class Ui_ConfiguracionClasificador(QDialog):
                 lista[title]= campo1
         self.tableWidget.insertRow(cell + 1)
         self.dicCapas[self.tableWidget.rowCount()-1]=lista
-        print(self.dicCapas)
 
 
 
@@ -185,13 +184,13 @@ class Ui_ConfiguracionClasificador(QDialog):
         item = self.tableWidget.verticalHeaderItem(0)
         item.setText(_translate("ConfiguracionClasificador", "1"))
         item = self.tableWidget.horizontalHeaderItem(0)
-        item.setText(_translate("ConfiguracionClasificador", "nombre"))
+        item.setText(_translate("ConfiguracionClasificador", "Nombre"))
         item = self.tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("ConfiguracionClasificador", "tipo"))
+        item.setText(_translate("ConfiguracionClasificador", "Tipo"))
         item = self.tableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("ConfiguracionClasificador", "nep"))
+        item.setText(_translate("ConfiguracionClasificador", "Nep"))
         item = self.tableWidget.horizontalHeaderItem(3)
-        item.setText(_translate("ConfiguracionClasificador", "activacion"))
+        item.setText(_translate("ConfiguracionClasificador", "Activacion"))
         self.pushButtonAdd.setText(_translate("ConfiguracionClasificador", "Añadir"))
         self.pushButtonEdit.setText(_translate("ConfiguracionClasificador", "Editar"))
         self.pushButtonDelete.setText(_translate("ConfiguracionClasificador", "Borrar"))

@@ -69,7 +69,6 @@ class Ui_ParamCompile(QDialog):
     '''
     def setLossValue(self, text):
         self.loss = text
-        print(self.loss )
 
     '''
     setOptimizerValue 
@@ -77,7 +76,6 @@ class Ui_ParamCompile(QDialog):
     '''
     def setOptimizerValue(self, text):
         self.optimize = text
-        print(self.optimize)
 
     '''
     setEpocasValue 
@@ -85,7 +83,6 @@ class Ui_ParamCompile(QDialog):
     '''
     def setEpocasValue(self, new_text):
         self.epocas = int(new_text)
-        print(self.epocas)
 
 
 
