@@ -6,8 +6,8 @@ class Ui_ParamCompile(QDialog):
 
     def setupUiParams(self, ParamCompile):
 
-        self.loss = None
-        self.optimize = None
+        self.loss = "mean_squared_error"
+        self.optimize = "SGD"
         self.epocas = None
 
 
@@ -30,28 +30,32 @@ class Ui_ParamCompile(QDialog):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(2, item)
         self.tableWidget.horizontalHeader().setDefaultSectionSize(150)
+
         self.comboBoxLoss = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxLoss.setGeometry(QtCore.QRect(80, 30, 131, 22))
         self.comboBoxLoss.setObjectName("comboBoxLoss")
-        self.comboBoxLoss.addItem("")
-        self.comboBoxLoss.addItem("mean_squared_error")
-        self.comboBoxLoss.addItem("categorical_crossentropy")
-        self.comboBoxLoss.addItem("binary_crossentropy")
-        self.comboBoxLoss.addItem("mean_absolute_error")
-        self.comboBoxLoss.addItem("mean_squared_logarithmic_error")
-        self.comboBoxLoss.addItem("kullback_leibler_divergence")
-        self.comboBoxLoss.setCurrentText("mean_squared_error")
+        self.comboBoxLoss.addItems([
+            "mean_squared_error",
+            "categorical_crossentropy",
+            "binary_crossentropy",
+            "mean_absolute_error",
+            "mean_squared_logarithmic_error",
+            "kullback_leibler_divergence"
+        ])
         self.comboBoxLoss.currentTextChanged.connect(self.setLossValue)
+        self.comboBoxLoss.setCurrentText(self.loss)
 
 
         self.comboBoxOptimizers = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxOptimizers.setGeometry(QtCore.QRect(250, 30, 91, 22))
         self.comboBoxOptimizers.setObjectName("comboBoxOptimizers")
-        self.comboBoxOptimizers.addItem("")
-        self.comboBoxOptimizers.addItem("SGD")
-        self.comboBoxOptimizers.addItem("RMSprop")
-        self.comboBoxOptimizers.addItem("Adam")
+        self.comboBoxOptimizers.addItems([
+            "SGD",
+            "RMSprop",
+            "Adam"
+        ])
         self.comboBoxOptimizers.currentTextChanged.connect(self.setOptimizerValue)
+        self.comboBoxOptimizers.setCurrentText(self.optimize)
 
 
         self.lineEditEpocas = QtWidgets.QLineEdit(parent=ParamCompile)
