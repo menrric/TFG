@@ -12,7 +12,7 @@ class Ui_ParamCompile(QDialog):
 
 
         ParamCompile.setObjectName("ParamCompile")
-        ParamCompile.resize(537, 59)
+        ParamCompile.resize(537, 110)
         self.tableWidget = QtWidgets.QTableWidget(parent=ParamCompile)
         self.tableWidget.setGeometry(QtCore.QRect(0, 0, 531, 241))
         self.tableWidget.setMidLineWidth(0)
@@ -63,6 +63,13 @@ class Ui_ParamCompile(QDialog):
         self.lineEditEpocas.setObjectName("lineEditEpocas")
         self.lineEditEpocas.textChanged.connect(self.setEpocasValue)
 
+        self.buttonBox = QtWidgets.QDialogButtonBox(parent=ParamCompile)
+        self.buttonBox.setGeometry(QtCore.QRect(200, 70, 160, 32))
+        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.accepted.connect(ParamCompile.accept)
+        self.buttonBox.rejected.connect(ParamCompile.reject)
+
         self.retranslateUi(ParamCompile)
         QtCore.QMetaObject.connectSlotsByName(ParamCompile)
 
@@ -86,9 +93,14 @@ class Ui_ParamCompile(QDialog):
     Function to use to store the value of epocas
     '''
     def setEpocasValue(self, new_text):
-        self.epocas = int(new_text)
-
-
+        if new_text.isnumeric():
+            epocas = int(new_text)
+            if epocas > 0:
+                self.epocas = epocas
+            else:
+                self.epocas = None
+        else:
+            self.epocas = None
 
     def retranslateUi(self, ParamCompile):
         _translate = QtCore.QCoreApplication.translate

@@ -97,7 +97,7 @@ class Ui_MainWindow(QMainWindow):
         self.ConfParamCompile.setObjectName("ConfParamCompile")
         self.verticalLayout.addWidget(self.ConfParamCompile)
         self.ConfParamCompile.setEnabled(bool(self.ruta))
-        self.ConfParamCompile.clicked.connect(self.openParamsCopile)
+        self.ConfParamCompile.clicked.connect(self.openParamsCompile)
 
 
         #EjecButton
@@ -170,56 +170,57 @@ class Ui_MainWindow(QMainWindow):
             self.textLoger.clear()
             self.textLoger.append('<u><b>La ruta de output proporcionada no es válida. Por favor, introduzca una nueva</b></u><br> ')
 
-
     '''
     Function that opens the ConfiguracionClasificador window when its button is selected
     '''
+
     def openConfClasi(self):
         self.confClasi = QtWidgets.QDialog()
         self.ui = Ui_ConfiguracionClasificador()
         self.ui.setupUi(self.confClasi)
-        self.confClasi.show()
         self.confClasi.rejected.connect(self.saveDiccionario)
         self.confClasi.show()
 
     '''
     Function that brings us the dictionary from the ConfiguracionClassificador window to the current 
     window to be able to use
-     '''
+    '''
+
     def saveDiccionario(self):
         self.diccionario = self.ui.dicCapas
-        tabla_html = '<table border="1">'
-        tabla_html += '<tr><th>Nombre</th><th>Tipo</th><th>NEP</th><th>Activación</th></tr>'
+        if self.diccionario:
+            tabla_html = '<table border="1">'
+            tabla_html += '<tr><th>Nombre</th><th>Tipo</th><th>NEP</th><th>Activación</th></tr>'
 
-        for clave, valor in self.diccionario.items():
-            nombre = valor['Nombre']
-            tipo = valor['Tipo']
-            nep = valor['Nep']
-            activacion = valor['Activacion']
+            for clave, valor in self.diccionario.items():
+                nombre = valor['Nombre']
+                tipo = valor['Tipo']
+                nep = valor['Nep']
+                activacion = valor['Activacion']
 
-            tabla_html += '<tr>'
-            tabla_html += '<td>' + nombre + '</td>'
-            tabla_html += '<td>' + tipo + '</td>'
-            tabla_html += '<td>' + str(nep) + '</td>'
-            tabla_html += '<td>' + activacion + '</td>'
-            tabla_html += '</tr>'
+                tabla_html += '<tr>'
+                tabla_html += '<td>' + nombre + '</td>'
+                tabla_html += '<td>' + tipo + '</td>'
+                tabla_html += '<td>' + str(nep) + '</td>'
+                tabla_html += '<td>' + activacion + '</td>'
+                tabla_html += '</tr>'
 
-        tabla_html += '</table>'
-        self.textLoger.append("<u><b>Los valores dados para el clasificador son:</u></b> <br> " +tabla_html + "<br><br>")
-        self.ConfClasiHecho=True
-        if self.ConfClasiHecho == True and self.ParamCompileHecho == True and self.rutaOutput != "" :
-            self.IniEjec.setEnabled(True)
+            tabla_html += '</table>'
+            self.textLoger.append(
+                "<u><b>Los valores dados para el clasificador son:</u></b> <br> " + tabla_html + "<br><br>")
+            self.ConfClasiHecho = True
+            if self.ConfClasiHecho and self.ParamCompileHecho and self.rutaOutput != "":
+                self.IniEjec.setEnabled(True)
 
     '''
     Function that opens the ParamCompile window when its button is selected
     '''
-
-    def openParamsCopile(self):
+    def openParamsCompile(self):
         self.ConfParamCompile = QtWidgets.QDialog()
         self.uiParams = Ui_ParamCompile()
         self.uiParams.setupUiParams(self.ConfParamCompile)
         self.ConfParamCompile.show()
-        self.ConfParamCompile.rejected.connect(self.saveParamsCompile)
+        self.ConfParamCompile.accepted.connect(self.saveParamsCompile)  # Cambio en el evento conectado
         self.ConfParamCompile.show()
 
     '''

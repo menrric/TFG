@@ -85,25 +85,56 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.retranslateUi(ConfiguracionClasificador)
         QtCore.QMetaObject.connectSlotsByName(ConfiguracionClasificador)
 
+    def validateNep(self, nep):
+        try:
+            nep_list = [int(x.strip()) for x in nep.split(",")]
+            return all(isinstance(x, int) and x > 0 for x in nep_list)
+        except ValueError:
+            return False
+
+    def validateField(self, field, value):
+        if field == "Nombre":
+            return value.strip() != ""
+        elif field == "Tipo":
+            return value == "Dense"
+        elif field == "Nep":
+            return self.validateNep(value)
+        elif field == "Activacion":
+            return value == "sigmoid"
+        else:
+            return True
+
     '''
     ADDROW 
     addRow is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
     to put in each field.
     '''
+
     def addRow(self):
+        cell = self.tableWidget.rowCount() - 1
 
-        lista= {}
-        cell = self.tableWidget.rowCount()-1
-        for col in range(self.tableWidget.columnCount()):
+        fields = [
+            ("Nombre", "El valor no es válido para el campo 'Nombre'"),
+            ("Tipo", "El valor no es válido para el campo 'Tipo'"),
+            ("Nep", "El valor no es válido para el campo 'Nep'"),
+            ("Activacion", "El valor no es válido para el campo 'Activación'")
+        ]
 
-            title = self.tableWidget.horizontalHeaderItem(col).text()
-            campo1, ok = QInputDialog.getText(self, title, title)
-            if ok and campo1 is not None:
-                self.tableWidget.setItem(cell, col, QTableWidgetItem(campo1))
-                lista[title]= campo1
+        lista = {}
+        for i, (title, error_message) in enumerate(fields):
+            while True:
+                campo, ok = QInputDialog.getText(self, title, title)
+                if not ok:
+                    return  # El usuario ha cancelado, se sale del método
+                if campo is not None and self.validateField(title, campo):
+                    self.tableWidget.setItem(cell, i, QTableWidgetItem(campo))
+                    lista[title] = campo
+                    break  # Campo válido, se sale del bucle
+                else:
+                    QMessageBox.warning(self, "Warning", error_message)
+
         self.tableWidget.insertRow(cell + 1)
-        self.dicCapas[self.tableWidget.rowCount()-1]=lista
-
+        self.dicCapas[self.tableWidget.rowCount() - 1] = lista
 
 
     '''
@@ -111,28 +142,35 @@ class Ui_ConfiguracionClasificador(QDialog):
     editItem is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
     button
     '''
+
     def editItem(self):
         row = self.tableWidget.currentRow()
         col = self.tableWidget.currentColumn()
         item = self.tableWidget.item(row, col)
-        header= self.tableWidget.horizontalHeaderItem(col).text()
+        header = self.tableWidget.horizontalHeaderItem(col).text()
 
         if item is not None:
             title = "Edit Item " + header
             data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, item.text())
             if ok and data is not None and data != "":
-                self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                self.dicCapas[row+1][header]=data
+                if self.validateField(header, data):
+                    self.tableWidget.setItem(row, col, QTableWidgetItem(data))
+                    self.dicCapas[row + 1][header] = data
+                else:
+                    QMessageBox.warning(self, "Warning", f"El valor no es válido para el campo '{header}'")
             else:
-                QMessageBox.warning(self, "Warning", "El valor no es valido")
+                QMessageBox.warning(self, "Warning", "El valor no es válido")
         else:
             title = "Edit Item"
             data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, "")
             if ok and data is not None and data != "":
-                self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                self.dicCapas[row+1][header]=data
+                if self.validateField(header, data):
+                    self.tableWidget.setItem(row, col, QTableWidgetItem(data))
+                    self.dicCapas[row + 1][header] = data
+                else:
+                    QMessageBox.warning(self, "Warning", f"El valor no es válido para el campo '{header}'")
             else:
-                QMessageBox.warning(self, "Warning", "El valor no es valido")
+                QMessageBox.warning(self, "Warning", "El valor no es válido")
 
     '''
     REMOVEROW 
@@ -149,18 +187,28 @@ class Ui_ConfiguracionClasificador(QDialog):
         if reply == QMessageBox.StandardButton.Yes:
             self.tableWidget.removeRow(row)
 
-    '''SWAPROWS 
-    swaprRows is used to swap two rows, which have to be passed as an argument. In this project, it is used to be called
-    in the swapRowUp and swapRowDown functions.
-    '''
     def swapRows(self, row1, row2):
+        rowCount = self.tableWidget.rowCount()
+
+        if not (0 <= row1 < rowCount and 0 <= row2 < rowCount):
+            QMessageBox.warning(self, "Aviso", "No es posible mover la fila")
+            return
+
+        key1 = row1 + 1
+        key2 = row2 + 1
+
+        if key1 not in self.dicCapas or key2 not in self.dicCapas:
+            QMessageBox.warning(self, "Aviso", "No es posible mover la fila")
+            return
+
         for col in range(self.tableWidget.columnCount()):
             item1 = self.tableWidget.takeItem(row1, col)
             item2 = self.tableWidget.takeItem(row2, col)
             self.tableWidget.setItem(row1, col, item2)
             self.tableWidget.setItem(row2, col, item1)
 
-        self.dicCapas[row1 + 1], self.dicCapas[row2 + 1] = self.dicCapas[row2 + 1], self.dicCapas[row1 + 1]
+        self.dicCapas[key1]['row'], self.dicCapas[key2]['row'] = row2, row1
+        self.dicCapas[key1], self.dicCapas[key2] = self.dicCapas[key2], self.dicCapas[key1]
 
     '''
     SWAPROWUP 
@@ -168,10 +216,8 @@ class Ui_ConfiguracionClasificador(QDialog):
     '''
     def swapRowUp(self):
         row = self.tableWidget.currentRow()
-        if row > 0:
-            self.swapRows(row, row - 1)
-            self.tableWidget.setCurrentCell(row - 1, 0)
-
+        self.swapRows(row, row - 1)
+        self.tableWidget.setCurrentCell(row - 1, 0)
 
     '''
     SWAPROWUP 
@@ -179,10 +225,8 @@ class Ui_ConfiguracionClasificador(QDialog):
     '''
     def swapRowDown(self):
         row = self.tableWidget.currentRow()
-        if row < self.tableWidget.rowCount() - 1:
-            self.swapRows(row, row + 1)
-            self.tableWidget.setCurrentCell(row + 1, 0)
-
+        self.swapRows(row, row + 1)
+        self.tableWidget.setCurrentCell(row + 1, 0)
 
 
     def retranslateUi(self, ConfiguracionClasificador):
