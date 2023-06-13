@@ -22,8 +22,12 @@ import os
 from xml.dom.minidom import parseString
 from dicttoxml import dicttoxml
 import xmltodict
+from threading import Thread, Lock
+from queue import Queue
+import xml.etree.ElementTree as ET
 
-from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER
+
+from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER, EntrenaYPrueba
 
 
 class Ui_MainWindow(QMainWindow):
@@ -203,7 +207,7 @@ class Ui_MainWindow(QMainWindow):
         tabla_html += '</table>'
         self.textLoger.append("<u><b>Los valores dados para el clasificador son:</u></b> <br> " +tabla_html + "<br><br>")
         self.ConfClasiHecho=True
-        if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
+        if self.ConfClasiHecho == True and self.ParamCompileHecho == True and self.rutaOutput != "" :
             self.IniEjec.setEnabled(True)
 
     '''
@@ -266,20 +270,14 @@ class Ui_MainWindow(QMainWindow):
                               "<br>")
 
 
-        EntrenDF = pd.read_csv(self.ruta +"/Entren_v1.csv")
-        PruebaDF = pd.read_csv(self.ruta +"/Prueba_v1.csv")
+        TodoDF = pd.read_csv(self.ruta +"/Todo.csv")
 
-        X_train, y_train = split_sequences(np.array(EntrenDF), 80)
+        TodoDF.drop(TodoDF.columns[[0]], axis=1, inplace=True)
+        #listaUsr = np.sort(TodoDF.NombreUsr.unique())
+        listaMar = TodoDF.Marca.unique()
+        listaSen = TodoDF.Sensor.unique()
 
-        X_test, y_test = split_sequences(np.array(PruebaDF), 80)
 
-        # Este ejemplo se crea para un MLP, por lo que vamos a poner en
-        # cada entrada una ventana de 80 muestras, cada muestra con 3 datos-dimensiones.
-        # Es decir, las entradas son vectores de 240 componentes.
-        X_train = X_train.reshape(-1, 240)
-        X_test = X_test.reshape(-1, 240)
-
-        EPOCAS = self.epocas
 
         MetaModelo = list_of_dicts
 
@@ -376,11 +374,11 @@ class Ui_MainWindow(QMainWindow):
             self.textLoger.append('<br>')
             contadorMod+=1
 
-        i = 0
 
         self.textLoger.append('<br><font size="10"><center><b>'
                               '---------------------- Generación de los directorios para cada modelo ----------------------'
                               '</b></center></font size="10"><br><br>')
+        i = 0
 
         for Modelo in ListaModelos:
 
@@ -406,9 +404,11 @@ class Ui_MainWindow(QMainWindow):
                 if e.errno != errno.EEXIST:
                     raise
 
+            modeloMLP.compile(loss=self.loss, optimizer=self.optimize, metrics=['accuracy'])
             modeloMLP.save(pathDir + "/modeloMLP.mod")
+
             self.textLoger.append('Generando y guardando el .mod del Modelo '+ str(i) +' en <b>'+ pathDir + '/modeloMLP.mod'+ '</b>')
-            DatosDict = dict({"Modelo": Modelo, "EER": []})
+            DatosDict = dict({"Modelo":Modelo, "Usuarios":[]})
             Datos_xml = dicttoxml(DatosDict, attr_type=False)
             dom = parseString(Datos_xml)
 
@@ -427,84 +427,83 @@ class Ui_MainWindow(QMainWindow):
         for Modelo in ListaModelos:
             pathDir = self.rutaOutput +"/Experimentos/" + str(i)
             pathModelo = pathDir + "/modeloMLP.mod"
-            EER = []
+
+            ResultadosQ = Queue()
+            self.textLoger.append("Iniciando modelo " + str(i))
 
             self.textLoger.append('<font size="4"><u>'
                                   'Modelo ' + str(i) + ' Resultados:'
                                   '</u></font size="4">')
 
-            Repeticiones = 5
-            for repeticion in range(0, Repeticiones):
-                modelo = tf.keras.models.load_model(pathModelo)
+            ResultadosTodosDF = pd.DataFrame()
+            # for usr in ListaUsr:     ESTE DEBERÍA SER EL BUCLE, PERO POR RAZONES DE TIEMPO SÓLO USAMOS 2 USUARIOS
+            for usr in ['TFMusuario1', 'TFMusuario2']:
+                Resultados_usr = EntrenaYPrueba(pathModelo, usuario=usr, listaMar=listaMar, listaSen=listaSen,
+                                                TodoDF=TodoDF, tipo=tipo, ResultadosQ=ResultadosQ, loss=self.loss,
+                                                optimizer=self.optimize, epocas=self.epocas, log=self.textLoger)
+                ResultadosTodosDF = pd.concat([ResultadosTodosDF, Resultados_usr])
+            NuevoUsuarioXML = ET.fromstring(ResultadosTodosDF.to_xml(root_name='Usuarios', row_name='Usuario'))
 
-                modelo.compile(loss=self.loss, optimizer=self.optimize, metrics=['accuracy'])
-                modelo.fit(X_train, y_train, batch_size=64, epochs=EPOCAS, verbose=0)
+            tree = ET.parse(pathDir + '/Experimento.xml')
+            raizXML = tree.getroot()
+            UsuariosXML = raizXML.find('Usuarios')
 
-                Salida_red = modelo.predict(X_test)
-                Salida_red = Salida_red.reshape(-1, 1)
+            for child in NuevoUsuarioXML.findall('Usuario'):
+                UsuariosXML.append(child)
 
-                # Evaluamos
-
-                EER.append(CalculaEER(Salida_red, y_test.reshape(-1, 1)))
-
-                self.textLoger.append("<br> La repetición " + str(repeticion + 1) +" ha terminado con un Error <b>EER=" + str(EER[repeticion]) +"</b>")
-
-            # Actualiza el fichero XML con la información del experimento
-
-                self.textLoger.append("<b>Actualizando el XML para añadirle el error calculado </b>")
-                fpxml = open(pathDir + '/Experimento.xml', "r")
-                xmlDoc = fpxml.read()
-                ExperimentoDict = xmltodict.parse(xmlDoc)
-
-                ModeloLista = ExperimentoDict['root']['Modelo']['item']
-
-                ExperimentoDict = dict({"Modelo": ModeloLista, 'EER': EER})
-
-                xmlDoc = dicttoxml(ExperimentoDict, attr_type=False)
-                dom = parseString(xmlDoc)
-
-                fpxml = open(pathDir + "/Experimento.xml", "w")
-                fpxml.write(dom.toprettyxml())
-                fpxml.close()
-            self.textLoger.append("<br>")
-
-            i = i + 1
-
-            pathDir = self.rutaOutput + "/Experimentos"
-
-            ResultadosLista = []
+            fpxml = open(pathDir + '/Experimento.xml', "wb")
+            tree.write(fpxml)
+            fpxml.close()
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Obtención de la lista de resultados para cada experimento ----------------------'
+                              '---------------------- Procesando resultados ----------------------'
                               '</b></center></font size="10"><br><br>')
-
+        i = 0
+        ResultadosTodoDF = pd.DataFrame()
         for subDir in next(os.walk(pathDir))[1]:
-            pathDir = self.rutaOutput + "/Experimentos/" + subDir
-            EER = []
+            pathDir = self.rutaOutput + "/Experimentos/" + str(i)
+            pathExperimento = pathDir + "/Experimento.xml"
 
-            fpxml = open(pathDir + "/Experimento.xml", "r")
+            self.textLoger.append('<br><font size="4"><center><b>'
+                                  '---------------------- Procesando resultados de ' + pathExperimento+ ' ----------------------'
+                                  '</b></center></font size="4"><br><br>')
+
+            fpxml = open(pathExperimento, "r")
             xmlDoc = fpxml.read()
             fpxml.close()
+
             ExperimentoDict = xmltodict.parse(xmlDoc)
-            ModeloList = ExperimentoDict['root']['Modelo']['item']
-            nepList = []
-            activacionList = []
-            numCapas = len(ModeloList)
-            for idCapa in range(numCapas):
-                nepList.append(ModeloList[idCapa]['Nep'])
-                activacionList.append(ModeloList[idCapa]['Activacion'])
-            EERList = list(map(float, ExperimentoDict['root']['EER']['item']))
 
-            Fila = [nepList, activacionList, np.mean(EERList)]
+            UsuariosDF = pd.DataFrame(ExperimentoDict['root']['Usuarios']['Usuario'])
+            UsuariosDF['EERlist'] = UsuariosDF['EER'].apply(lambda x: x.split())
 
+            EERmedio = []
+            for strList in UsuariosDF['EERlist']:
+                EERList = [float(i) for i in strList]
+                EERmedio.append(np.average(EERList))
+            UsuariosDF['EERmedio'] = EERmedio
+            UsuariosDF.drop('EER', axis=1, inplace=True)
+            UsuariosDF.drop('EERlist', axis=1, inplace=True)
+            UsuariosDF
 
-            ResultadosLista.append(Fila)
+            ModeloDict = ExperimentoDict['root']['Modelo']['item']
+            # Extraemos todos los parámetros que definen el modelo
+
+            ModeloList = []
+            NombreCols = []
+            idCapa = 0
+            for capa in ModeloDict:
+                for key in capa:
+                    ValorCol = capa[key]
+                    UsuariosDF[key + str(idCapa)] = ValorCol
+                idCapa = idCapa + 1
+
+            ResultadosTodoDF = pd.concat([ResultadosTodoDF, UsuariosDF], ignore_index=True)
+        i = 1+1
 
 
         #self.textLoger.append("<b>El resultado de la lista es: " + str(ResultadosLista) + "</b>")
 
-        ResultadosDF = pd.DataFrame(ResultadosLista, columns=['Arquitectura', 'Activaciones', 'EER'])
-        ResultadosDF.sort_values(by='EER')
 
         self.textLoger.append('<br><font size="10"><center><b>'
                               '---------------------- Fin de la ejecución ----------------------'

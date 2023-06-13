@@ -12,6 +12,13 @@ class Ui_ConfiguracionClasificador(QDialog):
         ConfiguracionClasificador.resize(577, 391)
         self.horizontalLayout = QtWidgets.QHBoxLayout(ConfiguracionClasificador)
         self.horizontalLayout.setObjectName("horizontalLayout")
+
+        # Cargar el ícono y escalarlo al tamaño deseado
+        icon = QtGui.QIcon("CuvaCompl.png")
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
+        scaled_icon = QtGui.QIcon(pixmap)
+        ConfiguracionClasificador.setWindowIcon(scaled_icon)
+
         self.tableWidget = QtWidgets.QTableWidget(ConfiguracionClasificador)
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(4)
