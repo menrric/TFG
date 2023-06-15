@@ -73,6 +73,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonEdit = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonEdit.setObjectName("pushButtonEdit")
         self.verticalLayout.addWidget(self.pushButtonEdit)
+        self.pushButtonEdit.setEnabled(False)
         self.pushButtonEdit.clicked.connect(self.editItem)
 
         # DELETE BUTTON
@@ -80,6 +81,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonDelete.setObjectName("pushButtonDelete")
         self.verticalLayout.addWidget(self.pushButtonDelete)
         self.horizontalLayout.addLayout(self.verticalLayout)
+        self.pushButtonDelete.setEnabled(False)
         self.pushButtonDelete.clicked.connect(self.removeRow)
 
         self.retranslateUi(ConfiguracionClasificador)
@@ -135,6 +137,8 @@ class Ui_ConfiguracionClasificador(QDialog):
 
         self.tableWidget.insertRow(cell + 1)
         self.dicCapas[self.tableWidget.rowCount() - 1] = lista
+        self.pushButtonEdit.setEnabled(True)
+        self.pushButtonDelete.setEnabled(True)
 
 
     '''
@@ -186,6 +190,19 @@ class Ui_ConfiguracionClasificador(QDialog):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.tableWidget.removeRow(row)
+        rowCount = self.tableWidget.rowCount()
+        dataExists = False
+        for row in range(rowCount):
+            for column in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(row, column)
+                if item and item.text():
+                    dataExists = True
+                    break
+            if dataExists:
+                break
+        if not dataExists:
+            self.pushButtonEdit.setEnabled(False)
+            self.pushButtonDelete.setEnabled(False)
 
     def swapRows(self, row1, row2):
         rowCount = self.tableWidget.rowCount()
