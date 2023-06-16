@@ -112,6 +112,7 @@ class Ui_MainWindow(QMainWindow):
         self.Grafic.setObjectName("Grafic")
         self.verticalLayout.addWidget(self.Grafic)
         self.Grafic.setEnabled(bool(self.rutaOutput))
+        self.Grafic.clicked.connect(self.generarGraficas)
 
         self.gridLayout_2.addLayout(self.verticalLayout, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -455,6 +456,7 @@ class Ui_MainWindow(QMainWindow):
             fpxml = open(pathDir + '/Experimento.xml', "wb")
             tree.write(fpxml)
             fpxml.close()
+            i = 1+i
 
         self.textLoger.append('<br><font size="10"><center><b>'
                               '---------------------- Procesando resultados ----------------------'
@@ -510,6 +512,27 @@ class Ui_MainWindow(QMainWindow):
                               '---------------------- Fin de la ejecución ----------------------'
                               '</b></center></font size="10"><br><br>')
         return 0
+
+    def generarGraficas(self):
+        self.CheckBoxes = []
+        self.Etiquetas = []
+
+        ruta_output = self.rutaOutput + "/Experimentos/"
+        columnas = set()
+
+        for experimento_folder in os.listdir(ruta_output):
+            experimento_path = os.path.join(ruta_output, experimento_folder)
+            if os.path.isdir(experimento_path):
+                xml_path = os.path.join(experimento_path, "Experimento.xml")
+                if os.path.exists(xml_path):
+                    tree = ET.parse(xml_path)
+                    root = tree.getroot()
+                    for elemento in root.iter():
+                        columnas.add(elemento.tag)
+
+        columnas = list(columnas)
+        print("hola")
+        print(columnas)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

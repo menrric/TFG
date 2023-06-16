@@ -100,6 +100,7 @@ class Ui_ParamCompile(QDialog):
             else:
                 self.epocas = None
         else:
+            QMessageBox.warning(self, "Warning", "El numero de épocas debe ser un entero positivo")
             self.epocas = None
 
     def retranslateUi(self, ParamCompile):

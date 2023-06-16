@@ -153,7 +153,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         item = self.tableWidget.item(row, col)
         header = self.tableWidget.horizontalHeaderItem(col).text()
 
-        if item is not None:
+        if item is not None and item.text():
             title = "Edit Item " + header
             data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, item.text())
             if ok and data is not None and data != "":
@@ -165,16 +165,7 @@ class Ui_ConfiguracionClasificador(QDialog):
             else:
                 QMessageBox.warning(self, "Warning", "El valor no es válido")
         else:
-            title = "Edit Item"
-            data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, "")
-            if ok and data is not None and data != "":
-                if self.validateField(header, data):
-                    self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                    self.dicCapas[row + 1][header] = data
-                else:
-                    QMessageBox.warning(self, "Warning", f"El valor no es válido para el campo '{header}'")
-            else:
-                QMessageBox.warning(self, "Warning", "El valor no es válido")
+            QMessageBox.warning(self, "Warning", "No hay información para editar")
 
     '''
     REMOVEROW 
