@@ -31,6 +31,12 @@ class Ui_ParamCompile(QDialog):
         self.tableWidget.setHorizontalHeaderItem(2, item)
         self.tableWidget.horizontalHeader().setDefaultSectionSize(150)
 
+        # Cargar el ícono y escalarlo al tamaño deseado
+        icon = QtGui.QIcon("CuvaCompl.png")
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
+        scaled_icon = QtGui.QIcon(pixmap)
+        ParamCompile.setWindowIcon(scaled_icon)
+
         self.comboBoxLoss = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxLoss.setGeometry(QtCore.QRect(80, 30, 131, 22))
         self.comboBoxLoss.setObjectName("comboBoxLoss")

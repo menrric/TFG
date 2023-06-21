@@ -52,6 +52,11 @@ class Ui_MainWindow(QMainWindow):
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
 
+        icon = QtGui.QIcon("CuvaCompl.png")
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
+        scaled_icon = QtGui.QIcon(pixmap)
+        MainWindow.setWindowIcon(scaled_icon)
+
         #Logger
         self.textLoger = QtWidgets.QTextEdit(parent=self.centralwidget)
         self.textLoger.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -266,7 +271,7 @@ class Ui_MainWindow(QMainWindow):
 
         self.textLoger.clear()
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Inicio de la ejecución ----------------------'
+                              ' Inicio de la ejecución '
                               '</b></center></font size="10"><br><br>')
 
         for key, value in self.diccionario.items():
@@ -306,7 +311,7 @@ class Ui_MainWindow(QMainWindow):
 
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Expansión de las capas ----------------------'
+                              ' Expansión de las capas '
                               '</b></center></font size="10"><br><br>')
 
         for idcapa in range(len(ExpandCapas)):
@@ -352,7 +357,7 @@ class Ui_MainWindow(QMainWindow):
 
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Agrupación de capas para formar los modelos ----------------------'
+                              'Agrupación de capas para formar los modelos '
                               '</b></center></font size="10"><br><br>')
 
         contadorMod=0
@@ -385,7 +390,7 @@ class Ui_MainWindow(QMainWindow):
 
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Generación de los directorios para cada modelo ----------------------'
+                              ' Generación de los directorios para cada modelo '
                               '</b></center></font size="10"><br><br>')
         i = 0
 
@@ -430,7 +435,7 @@ class Ui_MainWindow(QMainWindow):
         # Ahora vamos, modelo por modelo, entrenando y probando
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Entrenamiento y prueba de cada modelo. 5 Repeticiones por modelo ----------------------'
+                              ' Entrenamiento y prueba de cada modelo. 5 Repeticiones por modelo '
                               '</b></center></font size="10"><br><br>')
         i = 0
         for Modelo in ListaModelos:
@@ -466,7 +471,7 @@ class Ui_MainWindow(QMainWindow):
             i = 1+i
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Procesando resultados ----------------------'
+                              'Procesando resultados'
                               '</b></center></font size="10"><br><br>')
         i = 0
         ResultadosTodoDF = pd.DataFrame()
@@ -476,7 +481,7 @@ class Ui_MainWindow(QMainWindow):
             pathExperimento = pathDir + "/Experimento.xml"
 
             self.textLoger.append('<br><font size="4"><center><b>'
-                                  '---------------------- Procesando resultados de ' + pathExperimento+ ' ----------------------'
+                                  'Procesando resultados de ' + pathExperimento+ ''
                                   '</b></center></font size="4"><br><br>')
 
             fpxml = open(pathExperimento, "r")
@@ -516,7 +521,7 @@ class Ui_MainWindow(QMainWindow):
 
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Fin de la ejecución ----------------------'
+                              'Fin de la ejecución '
                               '</b></center></font size="10"><br><br>')
         return 0
 

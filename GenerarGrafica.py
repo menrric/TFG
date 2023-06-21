@@ -25,6 +25,12 @@ class Ui_GenerarGrafica(QDialog):
         self.verticalLayout = QVBoxLayout(GenerarGrafica)
         self.verticalLayout.setObjectName("verticalLayout")
 
+        # Cargar el ícono y escalarlo al tamaño deseado
+        icon = QtGui.QIcon("CuvaCompl.png")
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
+        scaled_icon = QtGui.QIcon(pixmap)
+        GenerarGrafica.setWindowIcon(scaled_icon)
+
         self.generateButton = QPushButton(GenerarGrafica)
         self.generateButton.setObjectName("generateButton")
         self.verticalLayout.addWidget(self.generateButton)
