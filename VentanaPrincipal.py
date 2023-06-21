@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMessageBox, QDialog, QMain
 from PyQt6.QtGui import QFont
 from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 from ParamCompile import Ui_ParamCompile
+from GenerarGrafica import Ui_GenerarGrafica
 
 
 import errno
@@ -25,7 +26,6 @@ import xmltodict
 from threading import Thread, Lock
 from queue import Queue
 import xml.etree.ElementTree as ET
-
 
 from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER, EntrenaYPrueba
 
@@ -112,7 +112,7 @@ class Ui_MainWindow(QMainWindow):
         self.Grafic.setObjectName("Grafic")
         self.verticalLayout.addWidget(self.Grafic)
         self.Grafic.setEnabled(bool(self.rutaOutput))
-        self.Grafic.clicked.connect(self.generarGraficas)
+        self.Grafic.clicked.connect(self.openGenerarGraficas)
 
         self.gridLayout_2.addLayout(self.verticalLayout, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -246,6 +246,13 @@ class Ui_MainWindow(QMainWindow):
         self.ParamCompileHecho = True
         if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
             self.IniEjec.setEnabled(True)
+
+    def openGenerarGraficas(self):
+        self.graficasDialog = QtWidgets.QDialog()
+        self.uiGraficas = Ui_GenerarGrafica()
+        self.uiGraficas.setupUiGenerarGrafica(self.graficasDialog)
+        self.graficasDialog.show()
+        self.uiGraficas.setRutaOutput(self.rutaOutput)
 
     def updateTextLoger(self):
         self.textLoger.repaint()  # Actualizar el contenido del objeto QTextEdit
@@ -463,8 +470,9 @@ class Ui_MainWindow(QMainWindow):
                               '</b></center></font size="10"><br><br>')
         i = 0
         ResultadosTodoDF = pd.DataFrame()
+        pathDir = self.rutaOutput + "/Experimentos/"
         for subDir in next(os.walk(pathDir))[1]:
-            pathDir = self.rutaOutput + "/Experimentos/" + str(i)
+            pathDir = self.rutaOutput + "/Experimentos/" + subDir
             pathExperimento = pathDir + "/Experimento.xml"
 
             self.textLoger.append('<br><font size="4"><center><b>'
@@ -502,7 +510,6 @@ class Ui_MainWindow(QMainWindow):
                 idCapa = idCapa + 1
 
             ResultadosTodoDF = pd.concat([ResultadosTodoDF, UsuariosDF], ignore_index=True)
-        i = 1+1
 
 
         #self.textLoger.append("<b>El resultado de la lista es: " + str(ResultadosLista) + "</b>")
@@ -513,26 +520,6 @@ class Ui_MainWindow(QMainWindow):
                               '</b></center></font size="10"><br><br>')
         return 0
 
-    def generarGraficas(self):
-        self.CheckBoxes = []
-        self.Etiquetas = []
-
-        ruta_output = self.rutaOutput + "/Experimentos/"
-        columnas = set()
-
-        for experimento_folder in os.listdir(ruta_output):
-            experimento_path = os.path.join(ruta_output, experimento_folder)
-            if os.path.isdir(experimento_path):
-                xml_path = os.path.join(experimento_path, "Experimento.xml")
-                if os.path.exists(xml_path):
-                    tree = ET.parse(xml_path)
-                    root = tree.getroot()
-                    for elemento in root.iter():
-                        columnas.add(elemento.tag)
-
-        columnas = list(columnas)
-        print("hola")
-        print(columnas)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
