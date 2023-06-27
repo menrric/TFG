@@ -1,8 +1,5 @@
-import subprocess
-
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMessageBox, QDialog, QMainWindow
-from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMainWindow
 from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 from ParamCompile import Ui_ParamCompile
 from GenerarGrafica import Ui_GenerarGrafica
@@ -13,23 +10,24 @@ import errno
 from keras import Sequential
 from keras.layers import Dense
 
-from sklearn.metrics import roc_curve
-import copy
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import tensorflow as tf
 import os
 from xml.dom.minidom import parseString
 from dicttoxml import dicttoxml
 import xmltodict
-from threading import Thread, Lock
 from queue import Queue
 import xml.etree.ElementTree as ET
 
-from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER, EntrenaYPrueba
+from FuncionesEntrenamiento import ExpandDict, EntrenaYPrueba
 
+'''
+Class prepared by the student Manuel Méndez Calvo, computer engineering student at UVa. The objective of this class is
+to be part of the TFG on the creation of classifiers for neural networks with data visualization.
 
+The main objective of this window is to make a MainWindow that can serve as a common thread for the rest of the windows,
+ as well as show us information about the process that the network execution follows.
+'''
 class Ui_MainWindow(QMainWindow):
 
 
@@ -53,7 +51,7 @@ class Ui_MainWindow(QMainWindow):
         self.gridLayout_2.setObjectName("gridLayout_2")
 
         icon = QtGui.QIcon("CuvaCompl.png")
-        pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))
         scaled_icon = QtGui.QIcon(pixmap)
         MainWindow.setWindowIcon(scaled_icon)
 
@@ -71,7 +69,7 @@ class Ui_MainWindow(QMainWindow):
         self.gridLayout_2.addWidget(self.textLoger, 0, 1, 7, 1)
         self.textLoger.setReadOnly(True)
         self.textLoger.setFont(self.font)
-        self.textLoger.setStyleSheet("QTextEdit { border: 1px solid black; background-color: white; padding: 15px; }")
+        self.textLoger.setStyleSheet("QTextEdit { border: 1px solid black; background-color: white; padding: 25px; }")
         self.textLoger.textChanged.connect(self.updateTextLoger)
 
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -135,9 +133,9 @@ class Ui_MainWindow(QMainWindow):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        self.textLoger.append('<br><font size="10"><center><b>Bienvenido.</b></center></font size="10">'
-                              '<br><br> Por favor, para empezar introduzca las rutas de input y output, '
-                              'después configure el clasificador y los parametros del compilador y luego inicie la ejecución')
+        self.textLoger.append('<br><font size="10"><center><b>Bienvenido</b></center></font size="10">'
+                              '<br> <center>Por favor, para empezar introduzca las rutas de input y output,'
+                              'después configure el clasificador y los parametros del compilador y luego inicie la ejecución</center> ')
 
 
 
@@ -179,7 +177,6 @@ class Ui_MainWindow(QMainWindow):
     '''
     Function that opens the ConfiguracionClasificador window when its button is selected
     '''
-
     def openConfClasi(self):
         self.confClasi = QtWidgets.QDialog()
         self.ui = Ui_ConfiguracionClasificador()
@@ -191,7 +188,6 @@ class Ui_MainWindow(QMainWindow):
     Function that brings us the dictionary from the ConfiguracionClassificador window to the current 
     window to be able to use
     '''
-
     def saveDiccionario(self):
         self.diccionario = self.ui.dicCapas
         if self.diccionario:
@@ -252,6 +248,9 @@ class Ui_MainWindow(QMainWindow):
         if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
             self.IniEjec.setEnabled(True)
 
+    '''
+    Function that opens the GenerarGrafica window when its button is selected
+    '''
     def openGenerarGraficas(self):
         self.graficasDialog = QtWidgets.QDialog()
         self.uiGraficas = Ui_GenerarGrafica()
@@ -259,13 +258,18 @@ class Ui_MainWindow(QMainWindow):
         self.graficasDialog.show()
         self.uiGraficas.setRutaOutput(self.rutaOutput)
 
+    '''
+    Function intended to update the QTextLogger so that a flow of interaction with the user is displayed
+    '''
     def updateTextLoger(self):
         self.textLoger.repaint()  # Actualizar el contenido del objeto QTextEdit
         QtWidgets.QApplication.processEvents()  # Actualizar la interfaz gráfica
 
 
 
-
+    '''
+    Function destined to start the execution for the classifier with the given parameters
+    '''
     def iniciarEjec(self):
         list_of_dicts = []
 
@@ -287,7 +291,7 @@ class Ui_MainWindow(QMainWindow):
         TodoDF = pd.read_csv(self.ruta +"/Todo.csv")
 
         TodoDF.drop(TodoDF.columns[[0]], axis=1, inplace=True)
-        #listaUsr = np.sort(TodoDF.NombreUsr.unique())
+        listaUsr = np.sort(TodoDF.NombreUsr.unique())
         listaMar = TodoDF.Marca.unique()
         listaSen = TodoDF.Sensor.unique()
 
@@ -296,9 +300,8 @@ class Ui_MainWindow(QMainWindow):
         MetaModelo = list_of_dicts
 
 
-        # CapasMLP es una lista de diccionarios. Cada item de la lista es una capa
-        # descrita por un diccionario.
-        # Partimos de la idea de que hay que expandir todas las capas.
+        # MLPLayers is a list of dictionaries. Each item in the list is a layer described by a dictionary.
+        # We start from the idea that all layers must be expanded.
 
         ExpandCapas = []
 
@@ -398,7 +401,7 @@ class Ui_MainWindow(QMainWindow):
 
             modeloMLP = Sequential()
 
-            # La capa de entrada es la capa 0. Luego, la capa 1 es la primera capa oculta
+            # The input layer is layer 0. Then layer 1 is the first hidden layer
             PrimeraCapaOculta = True
             for capa in Modelo:
                 if PrimeraCapaOculta:
@@ -432,7 +435,6 @@ class Ui_MainWindow(QMainWindow):
             fpxml.close()
 
             i = i + 1
-        # Ahora vamos, modelo por modelo, entrenando y probando
 
         self.textLoger.append('<br><font size="10"><center><b>'
                               ' Entrenamiento y prueba de cada modelo. 5 Repeticiones por modelo '
@@ -450,8 +452,8 @@ class Ui_MainWindow(QMainWindow):
                                   '</u></font size="4">')
 
             ResultadosTodosDF = pd.DataFrame()
-            # for usr in ListaUsr:     ESTE DEBERÍA SER EL BUCLE, PERO POR RAZONES DE TIEMPO SÓLO USAMOS 2 USUARIOS
-            for usr in ['TFMusuario1', 'TFMusuario2']:
+            # for usr in listaUsr:     ESTE DEBERÍA SER EL BUCLE, PERO POR RAZONES DE TIEMPO SÓLO USAMOS 2 USUARIOS
+            for usr in listaUsr:
                 Resultados_usr = EntrenaYPrueba(pathModelo, usuario=usr, listaMar=listaMar, listaSen=listaSen,
                                                 TodoDF=TodoDF, tipo=tipo, ResultadosQ=ResultadosQ, loss=self.loss,
                                                 optimizer=self.optimize, epocas=self.epocas, log=self.textLoger)
@@ -503,10 +505,8 @@ class Ui_MainWindow(QMainWindow):
             UsuariosDF
 
             ModeloDict = ExperimentoDict['root']['Modelo']['item']
-            # Extraemos todos los parámetros que definen el modelo
+            # We extract all the parameters that define the model
 
-            ModeloList = []
-            NombreCols = []
             idCapa = 0
             for capa in ModeloDict:
                 for key in capa:
@@ -517,12 +517,9 @@ class Ui_MainWindow(QMainWindow):
             ResultadosTodoDF = pd.concat([ResultadosTodoDF, UsuariosDF], ignore_index=True)
 
 
-        #self.textLoger.append("<b>El resultado de la lista es: " + str(ResultadosLista) + "</b>")
-
-
-        self.textLoger.append('<br><font size="10"><center><b>'
+        self.textLoger.append('<br><font size="10"><b>'
                               'Fin de la ejecución '
-                              '</b></center></font size="10"><br><br>')
+                              '</b></font size="10"><br><br>')
         return 0
 
 

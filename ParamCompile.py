@@ -1,7 +1,13 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox, QTableWidgetItem
+from PyQt6.QtWidgets import QDialog, QMessageBox
 
+'''
+Class prepared by the student Manuel Méndez Calvo, computer engineering student at UVa. The objective of this class is
+to be part of the TFG on the creation of classifiers for neural networks with data visualization.
 
+The main function of this class is to allow the user to provide the various compiler parameters. 
+These are the Loss function, the optimizer and the epochs
+'''
 class Ui_ParamCompile(QDialog):
 
     def setupUiParams(self, ParamCompile):
@@ -31,12 +37,12 @@ class Ui_ParamCompile(QDialog):
         self.tableWidget.setHorizontalHeaderItem(2, item)
         self.tableWidget.horizontalHeader().setDefaultSectionSize(150)
 
-        # Cargar el ícono y escalarlo al tamaño deseado
         icon = QtGui.QIcon("CuvaCompl.png")
         pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
         scaled_icon = QtGui.QIcon(pixmap)
         ParamCompile.setWindowIcon(scaled_icon)
 
+        #selection of the loss function
         self.comboBoxLoss = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxLoss.setGeometry(QtCore.QRect(80, 30, 131, 22))
         self.comboBoxLoss.setObjectName("comboBoxLoss")
@@ -51,7 +57,7 @@ class Ui_ParamCompile(QDialog):
         self.comboBoxLoss.currentTextChanged.connect(self.setLossValue)
         self.comboBoxLoss.setCurrentText(self.loss)
 
-
+        #optimizer selection
         self.comboBoxOptimizers = QtWidgets.QComboBox(parent=ParamCompile)
         self.comboBoxOptimizers.setGeometry(QtCore.QRect(250, 30, 91, 22))
         self.comboBoxOptimizers.setObjectName("comboBoxOptimizers")
@@ -63,7 +69,7 @@ class Ui_ParamCompile(QDialog):
         self.comboBoxOptimizers.currentTextChanged.connect(self.setOptimizerValue)
         self.comboBoxOptimizers.setCurrentText(self.optimize)
 
-
+        #Epocas
         self.lineEditEpocas = QtWidgets.QLineEdit(parent=ParamCompile)
         self.lineEditEpocas.setGeometry(QtCore.QRect(390, 30, 121, 20))
         self.lineEditEpocas.setObjectName("lineEditEpocas")
@@ -106,12 +112,12 @@ class Ui_ParamCompile(QDialog):
             else:
                 self.epocas = None
         else:
-            QMessageBox.warning(self, "Warning", "El numero de épocas debe ser un entero positivo")
+            QMessageBox.warning(self, "Warning", "El número de épocas debe ser un entero positivo")
             self.epocas = None
 
     def retranslateUi(self, ParamCompile):
         _translate = QtCore.QCoreApplication.translate
-        ParamCompile.setWindowTitle(_translate("ParamCompile", "Dialog"))
+        ParamCompile.setWindowTitle(_translate("ParamCompile", "ParamCompile"))
         item = self.tableWidget.verticalHeaderItem(0)
         item.setText(_translate("ParamCompile", "Parametros"))
         item = self.tableWidget.horizontalHeaderItem(0)

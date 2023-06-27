@@ -2,6 +2,15 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox, QTableWidgetItem
 
 
+'''
+Class prepared by the student Manuel Méndez Calvo, computer engineering student at UVa. The objective of this class is
+to be part of the TFG on the creation of classifiers for neural networks with data visualization.
+
+This is the class responsible for giving the user an interface simple enough to make it simple to set up classifiers
+for neural networks. For this, a table will be displayed where the user can add, delete and move (exchange the order)
+of different layers of the classifier. As well as editing specific characteristics of it. Right now the TFG is only
+designed to do MLP, so the validations of the classifier are limited for this network
+'''
 
 class Ui_ConfiguracionClasificador(QDialog):
     def setupUi(self, ConfiguracionClasificador):
@@ -13,9 +22,8 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.horizontalLayout = QtWidgets.QHBoxLayout(ConfiguracionClasificador)
         self.horizontalLayout.setObjectName("horizontalLayout")
 
-        # Cargar el ícono y escalarlo al tamaño deseado
         icon = QtGui.QIcon("CuvaCompl.png")
-        pixmap = icon.pixmap(QtCore.QSize(90, 90))  # Ajusta el tamaño del ícono aquí
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))
         scaled_icon = QtGui.QIcon(pixmap)
         ConfiguracionClasificador.setWindowIcon(scaled_icon)
 

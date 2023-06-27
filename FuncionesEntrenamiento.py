@@ -1,52 +1,45 @@
-import errno
-
-from keras import Sequential
-from keras.layers import Dense
-
 from sklearn.metrics import roc_curve
-import copy
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
-import os
-from threading import Thread, Lock
-from queue import Queue
-import xml.etree.ElementTree as ET
-def ExpandDict( Grid):
-    # Vamos a expandir la arquitectura descrita por el diccionario Grid yendo
-    # atributo (clave) por atributo, y generando una lista de arquitecturas
-    # expandidas.
+from threading import Thread
 
-    # Expand va a ser una lista de diccionarios (arquitecturas) a expandir.
-    # El primer item
+'''
+Class prepared by the student Manuel Méndez Calvo, computer engineering student at UVa. The objective of this class is
+to be part of the TFG on the creation of classifiers for neural networks with data visualization.
+
+This function is a helper for the execution of neural networks. In it we will have the different functions that we will
+be invoking throughout the execution and that will allow us to make everything work correctly.
+'''
+
+'''
+This function aims to expand the architecture described by the dictionary, iterating through attributes and
+generating a list with the expanded architecture.
+'''
+def ExpandDict( Grid):
+
     Expand = [Grid]
 
-    # Creamos una lista de atributos:
     atribList = Grid.keys()
 
-    # Expandimos por cada atributo, partiendo de lo expandido antes
+    # We expand for each attribute, starting from what was expanded before
 
     for atribExpand in atribList:
-        # Para cada item expandido lo repetimos para el siguiente atributo
-
-        # Guardamos los nuevos items expandidos en una lista
+        # For each expanded item we repeat it for the next attribute, saving the new ones in a list
         itemsNuevosList = []
 
         for itemExpand in Expand:
-            # Expandimos por el atributo seleccionado
+            # We expand by the selected attribute
             valor = itemExpand[atribExpand]
             valorList = valor.split(sep=",")
             if len(valorList) > 1:
-                # Hay algo que expandir...
                 for valor in valorList:
-                    itemNuevo = itemExpand.copy()  # Creamos una copia por cada valor
+                    itemNuevo = itemExpand.copy()
                     itemNuevo[atribExpand] = valor
 
                     itemsNuevosList.append(itemNuevo)
             else:
-                # El elemento no tenía nada que expandir en ese atributo,
-                # por lo que pasa a la lista tal cual.
+                # The element had nothing to expand on that attribute, so it goes into the list as-is.
 
                 itemsNuevosList.append(itemExpand)
 
@@ -54,8 +47,9 @@ def ExpandDict( Grid):
 
     return Expand
 
-
-# split a multivariate sequence into samples
+'''
+Function intended to split a multivariate sequence into samples
+'''
 def split_sequences( sequences, n_steps):
     X, y = list(), list()
     for i in range(len(sequences)):
@@ -71,8 +65,9 @@ def split_sequences( sequences, n_steps):
     return np.array(X), np.array(y)
 
 
-# Cálculo del Equi Error
-
+'''
+Function for calculating the error
+'''
 def CalculaEER( Estimado, Real):
     fpr, tpr, threshold = roc_curve(Real, Estimado, pos_label=1)
     fnr = 1 - tpr
@@ -81,7 +76,10 @@ def CalculaEER( Estimado, Real):
 
     return EER
 
-
+'''
+This function is intended to make a thread of iterations where we can parallelize the different calculations of
+the execution, making it much faster
+'''
 def HiloIteracion(pathModelo, X_train, y_train, X_test, y_test, ResultadosQ, loss, optimizer, epocas):
 
     modelo = tf.keras.models.load_model(pathModelo)
@@ -91,25 +89,22 @@ def HiloIteracion(pathModelo, X_train, y_train, X_test, y_test, ResultadosQ, los
     Salida_red = modelo.predict(X_test)
     Salida_red = Salida_red.reshape(-1, 1)
 
-    # Evaluamos
 
     EERhilo = CalculaEER(Salida_red, y_test.reshape(-1, 1))
 
-    # MutexHilos.release()
     ResultadosQ.put(EERhilo)
 
 
-# Entrena y prueba para sólo un usuario. Retorna EER para ese usuario.
-# Asume ya definidas ListaMar y ListaSen
+'''
+Function intended to generate user data based on the given input
+'''
+def GenDataUsr(DatosDF, usuario, marca, sensor):
 
-def GenDataUsr(DatosDF, usuario, marca, sensor):  # El conjunto está implícito en la variable usuario
+    # To train:
 
-    # Para Entrenar:
+    # Authentic:
 
-    # Auténticos:
-
-    # Muestras de entrenamiento:
-    # - Del conjunto TFM. de la marca, la muestra 1 de la sesión 1 del usuario --> Salida 1 (correcto)
+    # - From the TFM set. of the mark, the sample 1 of the session 1 of the user --> Exit 1 (correct)
     Entren1 = DatosDF.loc[(DatosDF.Conjunto == "TFM") &
                           (DatosDF.Marca == marca) &
                           (DatosDF.NombreUsr == usuario) &
@@ -118,8 +113,8 @@ def GenDataUsr(DatosDF, usuario, marca, sensor):  # El conjunto está implícito
                           (DatosDF.Muestra == 1)]
     Entren1["Salida"] = 1.0
 
-    # El conjunto de impostores para entrenar
-    # - Todas las muestras del conjunto TFG --> Salida 0 (impostores)
+    # Impostor:
+    # - All the samples of the TFG set --> Output 0 (imposters)
     Entren0 = DatosDF.loc[(DatosDF.Conjunto == "TFG") &
                           (DatosDF.Marca == marca) &
                           (DatosDF.Sensor == sensor)]
@@ -130,10 +125,10 @@ def GenDataUsr(DatosDF, usuario, marca, sensor):  # El conjunto está implícito
     Entren = pd.concat([Entren, Entren1], ignore_index=True)
     Entren.drop(Entren.columns[3:11], axis=1, inplace=True)
 
-    # Para probar
+    # Test
 
-    # Auténticas
-    # - Muestras 1 y 2 de la sesión 2 --> Salida 1 (correcto)
+    # Authentic
+    # - Samples 1 and 2 of session 2 --> Output 1 (correct)
     Prueba1 = DatosDF.loc[(DatosDF.Conjunto == "TFM") &
                           (DatosDF.NombreUsr == usuario) &
                           (DatosDF.Marca == marca) &
@@ -141,8 +136,8 @@ def GenDataUsr(DatosDF, usuario, marca, sensor):  # El conjunto está implícito
                           (DatosDF.Sesion == 2) & ((DatosDF.Muestra == 1) | (DatosDF.Muestra == 2))]
     Prueba1["Salida"] = 1.0
 
-    # Impostores:
-    # - Las muestras de TFM no usadas de impostores (muestra!=1 o sesión != 1) --> Salida 0 (impostor)
+    # Impostor:
+    # - The unused TFM samples of impostors (sample!=1 or session != 1) --> Output 0 (impostor)
     Prueba0 = DatosDF.loc[(DatosDF.Conjunto == "TFM") &
                           (DatosDF.Marca == marca) &
                           (DatosDF.NombreUsr != usuario) &
@@ -155,38 +150,33 @@ def GenDataUsr(DatosDF, usuario, marca, sensor):  # El conjunto está implícito
 
     return Entren, Prueba
 
+'''
+Function intended for training and testing. For this, the number of repetitions by default is 5
+'''
 def EntrenaYPrueba(pathModelo, usuario, listaMar, listaSen, TodoDF, tipo, ResultadosQ, loss, optimizer, epocas, log):
-    # Repeticiones es el número de veces que se repite
-    # el entrenamiento/prueba.
+    # Repetitions is the number of times the training/test is repeated. 5 default
 
     Resultados = pd.DataFrame(columns=("Usuario", "Marca", "Sensor", "Score", "EER"))
 
     for marca in listaMar:
-        ### Por sensor (GYR o ACC)
+        ### Sensor (GYR o ACC)
         for sensor in listaSen:
-            # Sólo creamos modelos para usuarios del conjunto TFM
+            # We only create models for users of the TFM set
             if usuario.startswith("TFG"):
                 continue
 
             Entren, Prueba = GenDataUsr(TodoDF, usuario, marca, sensor)
             log.append('<font size="4"><u>'
-                                  'Datos Generados para usuario: '+ usuario + marca + sensor +''
+                                  'Datos Generados para usuario: '+ usuario + ' ' + marca +' ' + sensor + ''
                                   '</u></font size="4">')
-
-
-            # Adaptamos los datos para la red CNN
-
-            # Como en los experimentos previos se usó una ventana de 8 segundos,
-            # ahora vamos a crear secuencias de 80 muestras (a 0.1 segundos por muestra)
 
             X_train, y_train = split_sequences(np.array(Entren), 80)
             X_test, y_test = split_sequences(np.array(Prueba), 80)
-            # Si la primera capa es "Dense" (probablemente porque estemos usando
-            # un MLP), hay que adaptar el tensor generado por split_sequences:
+            # # If the first layer is "Dense", as is the case in this version, the tensor
+            # generated by split_sequences must be adapted:
             if tipo == 'Dense':
-                # Vamos a poner en cada entrada una ventana de 80 muestras,
-                # cada muestra con 3 datos-dimensiones.
-                # Es decir, las entradas son vectores de 3x80=240 componentes.
+                # We are going to put in each entry a window of 80 samples, each sample with 3 data-dimensions.
+                # That is, the inputs are vectors of 3x80=240 components.
                 X_train = X_train.reshape(-1, 80 * 3)
                 X_test = X_test.reshape(-1, 80 * 3)
 
@@ -205,11 +195,10 @@ def EntrenaYPrueba(pathModelo, usuario, listaMar, listaSen, TodoDF, tipo, Result
                 EER.append(ret)
 
             for Hilo in ListaHilos:
-                # Esperamos a que terminen los hilos
+                # We wait for the threads to finish
                 Hilo.join()
 
-            # La columna Score la pongo a -1.0, porque no se usa (sólo tiene sentido cuando
-            # se hace una clasificaicón con etiqueta binaria True/False)
+            # The score column is set to -1 by default because it is only good for binary classifications
             Resultados.loc[len(Resultados)] = {"Usuario": usuario,
                                                "Marca": marca, "Sensor": sensor,
                                                "Score": -1.0,
