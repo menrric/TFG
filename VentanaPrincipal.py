@@ -1,5 +1,5 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMainWindow
+from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMainWindow, QMessageBox
 from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 from ParamCompile import Ui_ParamCompile
 from GenerarGrafica import Ui_GenerarGrafica
@@ -142,20 +142,31 @@ class Ui_MainWindow(QMainWindow):
     '''
     Function created to indicate the input path of the files
     '''
+
     def inputPath(self):
-        data, ok = QInputDialog.getText(self, "Ruta Input", "Indique la ruta donde se encuentra el input", QLineEdit.EchoMode.Normal, self.ruta)
+        data, ok = QInputDialog.getText(self, "Ruta Input", "Indique la ruta donde se encuentra el input",
+                                        QLineEdit.EchoMode.Normal, self.ruta)
         if ok and data is not None and data != "":
-            self.ruta=data
-            self.ConfClasi.setEnabled(bool(self.ruta))
-            self.ConfParamCompile.setEnabled(bool(self.ruta))
+            self.ruta = data
+
             if self.rutaOutput == "":
                 self.textLoger.clear()
-            self.textLoger.append('<u><b>La ruta de input proporcionada es: </b></u><br><br> '
-                                   + self.ruta + '<br><br>')
+
+            # Verificar si existe el archivo "Todo.csv" en la ruta de entrada
+            ruta_todo_csv = os.path.join(self.ruta, "Todo.csv")
+            if not os.path.isfile(ruta_todo_csv):
+                self.textLoger.clear()
+                self.textLoger.append(
+                    '<u><b>No se encontró el archivo "Todo.csv" en la ruta de input. Por favor, introduzca una nueva.</b></u><br> ')
+            else:
+                self.textLoger.append('<u><b>La ruta de input proporcionada es:</b></u><br><br> '
+                                      + self.ruta + '<br><br>')
+                self.ConfClasi.setEnabled(bool(self.ruta))
+                self.ConfParamCompile.setEnabled(bool(self.ruta))
         else:
             self.textLoger.clear()
-            self.textLoger.append('<u><b>La ruta de input proporcionada no es válida. Por favor, introduzca una nueva</b></u><br> ')
-
+            self.textLoger.append(
+                '<u><b>La ruta de input proporcionada no es válida. Por favor, introduzca una nueva.</b></u><br> ')
 
 
     '''
@@ -252,11 +263,17 @@ class Ui_MainWindow(QMainWindow):
     Function that opens the GenerarGrafica window when its button is selected
     '''
     def openGenerarGraficas(self):
+        rutaExperimentos = os.path.join(self.rutaOutput, "Experimentos")
         self.graficasDialog = QtWidgets.QDialog()
         self.uiGraficas = Ui_GenerarGrafica()
         self.uiGraficas.setupUiGenerarGrafica(self.graficasDialog)
-        self.graficasDialog.show()
-        self.uiGraficas.setRutaOutput(self.rutaOutput)
+        if not os.path.isdir(rutaExperimentos):
+            error_msg = "No se encontró la carpeta 'Experimentos' en la ruta de salida."
+            QMessageBox.critical(self, "Error", error_msg)
+            self.close()  # Cerrar la ventana actual
+        else:
+            self.graficasDialog.show()
+            self.uiGraficas.setRutaOutput(self.rutaOutput)
 
     '''
     Function intended to update the QTextLogger so that a flow of interaction with the user is displayed
