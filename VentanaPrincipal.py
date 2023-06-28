@@ -534,9 +534,9 @@ class Ui_MainWindow(QMainWindow):
             ResultadosTodoDF = pd.concat([ResultadosTodoDF, UsuariosDF], ignore_index=True)
 
 
-        self.textLoger.append('<br><font size="10"><b>'
+        self.textLoger.append('<br><font size="10"><center><b>'
                               'Fin de la ejecución '
-                              '</b></font size="10"><br><br>')
+                              '</b></font size="10"><br></center><br>')
         return 0
 
 
