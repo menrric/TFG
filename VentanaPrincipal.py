@@ -241,23 +241,26 @@ class Ui_MainWindow(QMainWindow):
     window to be able to use
      '''
     def saveParamsCompile(self):
-        self.loss = self.uiParams.loss
-        self.optimize = self.uiParams.optimize
         self.epocas = self.uiParams.epocas
-        tabla_html = '<table border="1">'
-        tabla_html += '<tr><th>Función Loss</th><th>Optimizador</th><th>Épocas</th></tr>'
+        if self.epocas is None:
+            QMessageBox.warning(self, "Warning", "No se han introducido las épocas ")
+        else:
+            self.loss = self.uiParams.loss
+            self.optimize = self.uiParams.optimize
+            tabla_html = '<table border="1">'
+            tabla_html += '<tr><th>Función Loss</th><th>Optimizador</th><th>Épocas</th></tr>'
 
-        tabla_html += '<tr>'
-        tabla_html += '<td>' + self.loss + '</td>'
-        tabla_html += '<td>' + self.optimize + '</td>'
-        tabla_html += '<td>' + str(self.epocas) + '</td>'
-        tabla_html += '</tr>'
+            tabla_html += '<tr>'
+            tabla_html += '<td>' + self.loss + '</td>'
+            tabla_html += '<td>' + self.optimize + '</td>'
+            tabla_html += '<td>' + str(self.epocas) + '</td>'
+            tabla_html += '</tr>'
 
-        tabla_html += '</table>'
-        self.textLoger.append("<u><b>Los valores dados para el compilador son:</u></b> <br> " +tabla_html + "<br><br>")
-        self.ParamCompileHecho = True
-        if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
-            self.IniEjec.setEnabled(True)
+            tabla_html += '</table>'
+            self.textLoger.append("<u><b>Los valores dados para el compilador son:</u></b> <br> " +tabla_html + "<br><br>")
+            self.ParamCompileHecho = True
+            if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
+                self.IniEjec.setEnabled(True)
 
     '''
     Function that opens the GenerarGrafica window when its button is selected
@@ -546,9 +549,9 @@ class Ui_MainWindow(QMainWindow):
         self.RInput.setText(_translate("MainWindow", "Ruta Input"))
         self.ROutput.setText(_translate("MainWindow", "Ruta Output"))
         self.ConfClasi.setText(_translate("MainWindow", "Configurar clasificador"))
-        self.ConfParamCompile.setText(_translate("MainWindow", "Parametros del Compile"))
+        self.ConfParamCompile.setText(_translate("MainWindow", "Parámetros del Compile"))
         self.IniEjec.setText(_translate("MainWindow", "Inicio ejecución"))
-        self.Grafic.setText(_translate("MainWindow", "Graficas"))
+        self.Grafic.setText(_translate("MainWindow", "Gráficas"))
 
 
 if __name__ == "__main__":

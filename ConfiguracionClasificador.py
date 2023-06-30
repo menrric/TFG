@@ -110,7 +110,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         elif field == "Nep":
             return self.validateNep(value)
         elif field == "Activacion":
-            return value == "sigmoid"
+            return value in ["sigmoid", "relu", "tanh", "softmax"]
         else:
             return True
 
@@ -247,7 +247,7 @@ class Ui_ConfiguracionClasificador(QDialog):
 
     def retranslateUi(self, ConfiguracionClasificador):
         _translate = QtCore.QCoreApplication.translate
-        ConfiguracionClasificador.setWindowTitle(_translate("ConfiguracionClasificador", "ConfiguracionClasificador"))
+        ConfiguracionClasificador.setWindowTitle(_translate("ConfiguracionClasificador", "Configuracion del Clasificador"))
         item = self.tableWidget.verticalHeaderItem(0)
         item.setText(_translate("ConfiguracionClasificador", "1"))
         item = self.tableWidget.horizontalHeaderItem(0)

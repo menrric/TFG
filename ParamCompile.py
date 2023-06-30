@@ -117,15 +117,15 @@ class Ui_ParamCompile(QDialog):
 
     def retranslateUi(self, ParamCompile):
         _translate = QtCore.QCoreApplication.translate
-        ParamCompile.setWindowTitle(_translate("ParamCompile", "ParamCompile"))
+        ParamCompile.setWindowTitle(_translate("ParamCompile", "Parámetros del Compile"))
         item = self.tableWidget.verticalHeaderItem(0)
-        item.setText(_translate("ParamCompile", "Parametros"))
+        item.setText(_translate("ParamCompile", "Parámetros"))
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("ParamCompile", "Función Loss"))
         item = self.tableWidget.horizontalHeaderItem(1)
         item.setText(_translate("ParamCompile", "Optimizers"))
         item = self.tableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("ParamCompile", "Epocas"))
+        item.setText(_translate("ParamCompile", "Épocas"))
         self.comboBoxLoss.setItemText(0, _translate("ParamCompile", "mean_squared_error"))
         self.comboBoxLoss.setItemText(1, _translate("ParamCompile", "categorical_crossentropy"))
         self.comboBoxLoss.setItemText(2, _translate("ParamCompile", "binary_crossentropy"))
