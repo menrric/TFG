@@ -2,6 +2,15 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QDialog, QInputDialog, QLineEdit, QMessageBox, QTableWidgetItem
 
 
+'''
+Class prepared by the student Manuel Méndez Calvo, computer engineering student at UVa. The objective of this class is
+to be part of the TFG on the creation of classifiers for neural networks with data visualization.
+
+This is the class responsible for giving the user an interface simple enough to make it simple to set up classifiers
+for neural networks. For this, a table will be displayed where the user can add, delete and move (exchange the order)
+of different layers of the classifier. As well as editing specific characteristics of it. Right now the TFG is only
+designed to do MLP, so the validations of the classifier are limited for this network
+'''
 
 class Ui_ConfiguracionClasificador(QDialog):
     def setupUi(self, ConfiguracionClasificador):
@@ -12,6 +21,12 @@ class Ui_ConfiguracionClasificador(QDialog):
         ConfiguracionClasificador.resize(577, 391)
         self.horizontalLayout = QtWidgets.QHBoxLayout(ConfiguracionClasificador)
         self.horizontalLayout.setObjectName("horizontalLayout")
+
+        icon = QtGui.QIcon("CuvaCompl.png")
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))
+        scaled_icon = QtGui.QIcon(pixmap)
+        ConfiguracionClasificador.setWindowIcon(scaled_icon)
+
         self.tableWidget = QtWidgets.QTableWidget(ConfiguracionClasificador)
         self.tableWidget.setObjectName("tableWidget")
         self.tableWidget.setColumnCount(4)
@@ -66,6 +81,7 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonEdit = QtWidgets.QPushButton(ConfiguracionClasificador)
         self.pushButtonEdit.setObjectName("pushButtonEdit")
         self.verticalLayout.addWidget(self.pushButtonEdit)
+        self.pushButtonEdit.setEnabled(False)
         self.pushButtonEdit.clicked.connect(self.editItem)
 
         # DELETE BUTTON
@@ -73,30 +89,64 @@ class Ui_ConfiguracionClasificador(QDialog):
         self.pushButtonDelete.setObjectName("pushButtonDelete")
         self.verticalLayout.addWidget(self.pushButtonDelete)
         self.horizontalLayout.addLayout(self.verticalLayout)
+        self.pushButtonDelete.setEnabled(False)
         self.pushButtonDelete.clicked.connect(self.removeRow)
 
         self.retranslateUi(ConfiguracionClasificador)
         QtCore.QMetaObject.connectSlotsByName(ConfiguracionClasificador)
+
+    def validateNep(self, nep):
+        try:
+            nep_list = [int(x.strip()) for x in nep.split(",")]
+            return all(isinstance(x, int) and x > 0 for x in nep_list)
+        except ValueError:
+            return False
+
+    def validateField(self, field, value):
+        if field == "Nombre":
+            return value.strip() != ""
+        elif field == "Tipo":
+            return value == "Dense"
+        elif field == "Nep":
+            return self.validateNep(value)
+        elif field == "Activacion":
+            return value in ["sigmoid", "relu", "tanh", "softmax"]
+        else:
+            return True
 
     '''
     ADDROW 
     addRow is used to add a new row to our table. To do this, a pop-up will be displayed that will ask us what we want
     to put in each field.
     '''
+
     def addRow(self):
+        cell = self.tableWidget.rowCount() - 1
 
-        lista= {}
-        cell = self.tableWidget.rowCount()-1
-        for col in range(self.tableWidget.columnCount()):
+        fields = [
+            ("Nombre", "El valor no es válido para el campo 'Nombre'"),
+            ("Tipo", "El valor no es válido para el campo 'Tipo'"),
+            ("Nep", "El valor no es válido para el campo 'Nep'"),
+            ("Activacion", "El valor no es válido para el campo 'Activación'")
+        ]
 
-            title = self.tableWidget.horizontalHeaderItem(col).text()
-            campo1, ok = QInputDialog.getText(self, title, title)
-            if ok and campo1 is not None:
-                self.tableWidget.setItem(cell, col, QTableWidgetItem(campo1))
-                lista[title]= campo1
+        lista = {}
+        for i, (title, error_message) in enumerate(fields):
+            while True:
+                campo, ok = QInputDialog.getText(self, title, title)
+                if not ok:
+                    return  # El usuario ha cancelado, se sale del método
+                if campo is not None and self.validateField(title, campo):
+                    self.tableWidget.setItem(cell, i, QTableWidgetItem(campo))
+                    lista[title] = campo
+                    break  # Campo válido, se sale del bucle
+                else:
+                    QMessageBox.warning(self, "Warning", error_message)
+
         self.tableWidget.insertRow(cell + 1)
-        self.dicCapas[self.tableWidget.rowCount()-1]=lista
-
+        self.dicCapas[self.tableWidget.rowCount() - 1] = lista
+        self.pushButtonEdit.setEnabled(True)
+        self.pushButtonDelete.setEnabled(True)
 
 
     '''
@@ -104,28 +154,26 @@ class Ui_ConfiguracionClasificador(QDialog):
     editItem is used to edit a particular field in a row. To do this, click on the cell to edit and press the edit
     button
     '''
+
     def editItem(self):
         row = self.tableWidget.currentRow()
         col = self.tableWidget.currentColumn()
         item = self.tableWidget.item(row, col)
-        header= self.tableWidget.horizontalHeaderItem(col).text()
+        header = self.tableWidget.horizontalHeaderItem(col).text()
 
-        if item is not None:
+        if item is not None and item.text():
             title = "Edit Item " + header
             data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, item.text())
             if ok and data is not None and data != "":
-                self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                self.dicCapas[row+1][header]=data
+                if self.validateField(header, data):
+                    self.tableWidget.setItem(row, col, QTableWidgetItem(data))
+                    self.dicCapas[row + 1][header] = data
+                else:
+                    QMessageBox.warning(self, "Warning", f"El valor no es válido para el campo '{header}'")
             else:
-                QMessageBox.warning(self, "Warning", "El valor no es valido")
+                QMessageBox.warning(self, "Warning", "El valor no es válido")
         else:
-            title = "Edit Item"
-            data, ok = QInputDialog.getText(self, title, title, QLineEdit.EchoMode.Normal, "")
-            if ok and data is not None and data != "":
-                self.tableWidget.setItem(row, col, QTableWidgetItem(data))
-                self.dicCapas[row+1][header]=data
-            else:
-                QMessageBox.warning(self, "Warning", "El valor no es valido")
+            QMessageBox.warning(self, "Warning", "No hay información para editar")
 
     '''
     REMOVEROW 
@@ -141,19 +189,42 @@ class Ui_ConfiguracionClasificador(QDialog):
 
         if reply == QMessageBox.StandardButton.Yes:
             self.tableWidget.removeRow(row)
+        rowCount = self.tableWidget.rowCount()
+        dataExists = False
+        for row in range(rowCount):
+            for column in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(row, column)
+                if item and item.text():
+                    dataExists = True
+                    break
+            if dataExists:
+                break
+        if not dataExists:
+            self.pushButtonEdit.setEnabled(False)
+            self.pushButtonDelete.setEnabled(False)
 
-    '''SWAPROWS 
-    swaprRows is used to swap two rows, which have to be passed as an argument. In this project, it is used to be called
-    in the swapRowUp and swapRowDown functions.
-    '''
     def swapRows(self, row1, row2):
+        rowCount = self.tableWidget.rowCount()
+
+        if not (0 <= row1 < rowCount and 0 <= row2 < rowCount):
+            QMessageBox.warning(self, "Aviso", "No es posible mover la fila")
+            return
+
+        key1 = row1 + 1
+        key2 = row2 + 1
+
+        if key1 not in self.dicCapas or key2 not in self.dicCapas:
+            QMessageBox.warning(self, "Aviso", "No es posible mover la fila")
+            return
+
         for col in range(self.tableWidget.columnCount()):
             item1 = self.tableWidget.takeItem(row1, col)
             item2 = self.tableWidget.takeItem(row2, col)
             self.tableWidget.setItem(row1, col, item2)
             self.tableWidget.setItem(row2, col, item1)
 
-        self.dicCapas[row1 + 1], self.dicCapas[row2 + 1] = self.dicCapas[row2 + 1], self.dicCapas[row1 + 1]
+        self.dicCapas[key1]['row'], self.dicCapas[key2]['row'] = row2, row1
+        self.dicCapas[key1], self.dicCapas[key2] = self.dicCapas[key2], self.dicCapas[key1]
 
     '''
     SWAPROWUP 
@@ -161,10 +232,8 @@ class Ui_ConfiguracionClasificador(QDialog):
     '''
     def swapRowUp(self):
         row = self.tableWidget.currentRow()
-        if row > 0:
-            self.swapRows(row, row - 1)
-            self.tableWidget.setCurrentCell(row - 1, 0)
-
+        self.swapRows(row, row - 1)
+        self.tableWidget.setCurrentCell(row - 1, 0)
 
     '''
     SWAPROWUP 
@@ -172,15 +241,13 @@ class Ui_ConfiguracionClasificador(QDialog):
     '''
     def swapRowDown(self):
         row = self.tableWidget.currentRow()
-        if row < self.tableWidget.rowCount() - 1:
-            self.swapRows(row, row + 1)
-            self.tableWidget.setCurrentCell(row + 1, 0)
-
+        self.swapRows(row, row + 1)
+        self.tableWidget.setCurrentCell(row + 1, 0)
 
 
     def retranslateUi(self, ConfiguracionClasificador):
         _translate = QtCore.QCoreApplication.translate
-        ConfiguracionClasificador.setWindowTitle(_translate("ConfiguracionClasificador", "ConfiguracionClasificador"))
+        ConfiguracionClasificador.setWindowTitle(_translate("ConfiguracionClasificador", "Configuracion del Clasificador"))
         item = self.tableWidget.verticalHeaderItem(0)
         item.setText(_translate("ConfiguracionClasificador", "1"))
         item = self.tableWidget.horizontalHeaderItem(0)

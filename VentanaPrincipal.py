@@ -1,10 +1,8 @@
-import subprocess
-
 from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMessageBox, QDialog, QMainWindow
-from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QInputDialog, QLineEdit, QMainWindow, QMessageBox
 from ConfiguracionClasificador import Ui_ConfiguracionClasificador
 from ParamCompile import Ui_ParamCompile
+from GenerarGrafica import Ui_GenerarGrafica
 
 
 import errno
@@ -12,20 +10,24 @@ import errno
 from keras import Sequential
 from keras.layers import Dense
 
-from sklearn.metrics import roc_curve
-import copy
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-import tensorflow as tf
 import os
 from xml.dom.minidom import parseString
 from dicttoxml import dicttoxml
 import xmltodict
+from queue import Queue
+import xml.etree.ElementTree as ET
 
-from FuncionesEntrenamiento import ExpandDict, split_sequences, CalculaEER
+from FuncionesEntrenamiento import ExpandDict, EntrenaYPrueba
 
+'''
+Class prepared by the student Manuel Méndez Calvo, computer engineering student at UVa. The objective of this class is
+to be part of the TFG on the creation of classifiers for neural networks with data visualization.
 
+The main objective of this window is to make a MainWindow that can serve as a common thread for the rest of the windows,
+ as well as show us information about the process that the network execution follows.
+'''
 class Ui_MainWindow(QMainWindow):
 
 
@@ -48,6 +50,11 @@ class Ui_MainWindow(QMainWindow):
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout_2.setObjectName("gridLayout_2")
 
+        icon = QtGui.QIcon("CuvaCompl.png")
+        pixmap = icon.pixmap(QtCore.QSize(90, 90))
+        scaled_icon = QtGui.QIcon(pixmap)
+        MainWindow.setWindowIcon(scaled_icon)
+
         #Logger
         self.textLoger = QtWidgets.QTextEdit(parent=self.centralwidget)
         self.textLoger.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -62,7 +69,7 @@ class Ui_MainWindow(QMainWindow):
         self.gridLayout_2.addWidget(self.textLoger, 0, 1, 7, 1)
         self.textLoger.setReadOnly(True)
         self.textLoger.setFont(self.font)
-        self.textLoger.setStyleSheet("QTextEdit { border: 1px solid black; background-color: white; padding: 15px; }")
+        self.textLoger.setStyleSheet("QTextEdit { border: 1px solid black; background-color: white; padding: 25px; }")
         self.textLoger.textChanged.connect(self.updateTextLoger)
 
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -93,7 +100,7 @@ class Ui_MainWindow(QMainWindow):
         self.ConfParamCompile.setObjectName("ConfParamCompile")
         self.verticalLayout.addWidget(self.ConfParamCompile)
         self.ConfParamCompile.setEnabled(bool(self.ruta))
-        self.ConfParamCompile.clicked.connect(self.openParamsCopile)
+        self.ConfParamCompile.clicked.connect(self.openParamsCompile)
 
 
         #EjecButton
@@ -108,6 +115,7 @@ class Ui_MainWindow(QMainWindow):
         self.Grafic.setObjectName("Grafic")
         self.verticalLayout.addWidget(self.Grafic)
         self.Grafic.setEnabled(bool(self.rutaOutput))
+        self.Grafic.clicked.connect(self.openGenerarGraficas)
 
         self.gridLayout_2.addLayout(self.verticalLayout, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -125,29 +133,40 @@ class Ui_MainWindow(QMainWindow):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        self.textLoger.append('<br><font size="10"><center><b>Bienvenido.</b></center></font size="10">'
-                              '<br><br> Por favor, para empezar introduzca las rutas de input y output, '
-                              'después configure el clasificador y los parametros del compilador y luego inicie la ejecución')
+        self.textLoger.append('<br><font size="10"><center><b>Bienvenido</b></center></font size="10">'
+                              '<br> <center>Por favor, para empezar introduzca las rutas de input y output,'
+                              'después configure el clasificador y los parametros del compilador y luego inicie la ejecución</center> ')
 
 
 
     '''
     Function created to indicate the input path of the files
     '''
+
     def inputPath(self):
-        data, ok = QInputDialog.getText(self, "Ruta Input", "Indique la ruta donde se encuentra el input", QLineEdit.EchoMode.Normal, self.ruta)
+        data, ok = QInputDialog.getText(self, "Ruta Input", "Indique la ruta donde se encuentra el input",
+                                        QLineEdit.EchoMode.Normal, self.ruta)
         if ok and data is not None and data != "":
-            self.ruta=data
-            self.ConfClasi.setEnabled(bool(self.ruta))
-            self.ConfParamCompile.setEnabled(bool(self.ruta))
+            self.ruta = data
+
             if self.rutaOutput == "":
                 self.textLoger.clear()
-            self.textLoger.append('<u><b>La ruta de input proporcionada es: </b></u><br><br> '
-                                   + self.ruta + '<br><br>')
+
+            # Verificar si existe el archivo "Todo.csv" en la ruta de entrada
+            ruta_todo_csv = os.path.join(self.ruta, "Todo.csv")
+            if not os.path.isfile(ruta_todo_csv):
+                self.textLoger.clear()
+                self.textLoger.append(
+                    '<u><b>No se encontró el archivo "Todo.csv" en la ruta de input. Por favor, introduzca una nueva.</b></u><br> ')
+            else:
+                self.textLoger.append('<u><b>La ruta de input proporcionada es:</b></u><br><br> '
+                                      + self.ruta + '<br><br>')
+                self.ConfClasi.setEnabled(bool(self.ruta))
+                self.ConfParamCompile.setEnabled(bool(self.ruta))
         else:
             self.textLoger.clear()
-            self.textLoger.append('<u><b>La ruta de input proporcionada no es válida. Por favor, introduzca una nueva</b></u><br> ')
-
+            self.textLoger.append(
+                '<u><b>La ruta de input proporcionada no es válida. Por favor, introduzca una nueva.</b></u><br> ')
 
 
     '''
@@ -166,7 +185,6 @@ class Ui_MainWindow(QMainWindow):
             self.textLoger.clear()
             self.textLoger.append('<u><b>La ruta de output proporcionada no es válida. Por favor, introduzca una nueva</b></u><br> ')
 
-
     '''
     Function that opens the ConfiguracionClasificador window when its button is selected
     '''
@@ -174,48 +192,48 @@ class Ui_MainWindow(QMainWindow):
         self.confClasi = QtWidgets.QDialog()
         self.ui = Ui_ConfiguracionClasificador()
         self.ui.setupUi(self.confClasi)
-        self.confClasi.show()
         self.confClasi.rejected.connect(self.saveDiccionario)
         self.confClasi.show()
 
     '''
     Function that brings us the dictionary from the ConfiguracionClassificador window to the current 
     window to be able to use
-     '''
+    '''
     def saveDiccionario(self):
         self.diccionario = self.ui.dicCapas
-        tabla_html = '<table border="1">'
-        tabla_html += '<tr><th>Nombre</th><th>Tipo</th><th>NEP</th><th>Activación</th></tr>'
+        if self.diccionario:
+            tabla_html = '<table border="1">'
+            tabla_html += '<tr><th>Nombre</th><th>Tipo</th><th>NEP</th><th>Activación</th></tr>'
 
-        for clave, valor in self.diccionario.items():
-            nombre = valor['Nombre']
-            tipo = valor['Tipo']
-            nep = valor['Nep']
-            activacion = valor['Activacion']
+            for clave, valor in self.diccionario.items():
+                nombre = valor['Nombre']
+                tipo = valor['Tipo']
+                nep = valor['Nep']
+                activacion = valor['Activacion']
 
-            tabla_html += '<tr>'
-            tabla_html += '<td>' + nombre + '</td>'
-            tabla_html += '<td>' + tipo + '</td>'
-            tabla_html += '<td>' + str(nep) + '</td>'
-            tabla_html += '<td>' + activacion + '</td>'
-            tabla_html += '</tr>'
+                tabla_html += '<tr>'
+                tabla_html += '<td>' + nombre + '</td>'
+                tabla_html += '<td>' + tipo + '</td>'
+                tabla_html += '<td>' + str(nep) + '</td>'
+                tabla_html += '<td>' + activacion + '</td>'
+                tabla_html += '</tr>'
 
-        tabla_html += '</table>'
-        self.textLoger.append("<u><b>Los valores dados para el clasificador son:</u></b> <br> " +tabla_html + "<br><br>")
-        self.ConfClasiHecho=True
-        if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
-            self.IniEjec.setEnabled(True)
+            tabla_html += '</table>'
+            self.textLoger.append(
+                "<u><b>Los valores dados para el clasificador son:</u></b> <br> " + tabla_html + "<br><br>")
+            self.ConfClasiHecho = True
+            if self.ConfClasiHecho and self.ParamCompileHecho and self.rutaOutput != "":
+                self.IniEjec.setEnabled(True)
 
     '''
     Function that opens the ParamCompile window when its button is selected
     '''
-
-    def openParamsCopile(self):
+    def openParamsCompile(self):
         self.ConfParamCompile = QtWidgets.QDialog()
         self.uiParams = Ui_ParamCompile()
         self.uiParams.setupUiParams(self.ConfParamCompile)
         self.ConfParamCompile.show()
-        self.ConfParamCompile.rejected.connect(self.saveParamsCompile)
+        self.ConfParamCompile.accepted.connect(self.saveParamsCompile)  # Cambio en el evento conectado
         self.ConfParamCompile.show()
 
     '''
@@ -223,37 +241,61 @@ class Ui_MainWindow(QMainWindow):
     window to be able to use
      '''
     def saveParamsCompile(self):
-        self.loss = self.uiParams.loss
-        self.optimize = self.uiParams.optimize
         self.epocas = self.uiParams.epocas
-        tabla_html = '<table border="1">'
-        tabla_html += '<tr><th>Función Loss</th><th>Optimizador</th><th>Épocas</th></tr>'
+        if self.epocas is None:
+            QMessageBox.warning(self, "Warning", "No se han introducido las épocas ")
+        else:
+            self.loss = self.uiParams.loss
+            self.optimize = self.uiParams.optimize
+            tabla_html = '<table border="1">'
+            tabla_html += '<tr><th>Función Loss</th><th>Optimizador</th><th>Épocas</th></tr>'
 
-        tabla_html += '<tr>'
-        tabla_html += '<td>' + self.loss + '</td>'
-        tabla_html += '<td>' + self.optimize + '</td>'
-        tabla_html += '<td>' + str(self.epocas) + '</td>'
-        tabla_html += '</tr>'
+            tabla_html += '<tr>'
+            tabla_html += '<td>' + self.loss + '</td>'
+            tabla_html += '<td>' + self.optimize + '</td>'
+            tabla_html += '<td>' + str(self.epocas) + '</td>'
+            tabla_html += '</tr>'
 
-        tabla_html += '</table>'
-        self.textLoger.append("<u><b>Los valores dados para el compilador son:</u></b> <br> " +tabla_html + "<br><br>")
-        self.ParamCompileHecho = True
-        if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
-            self.IniEjec.setEnabled(True)
+            tabla_html += '</table>'
+            self.textLoger.append("<u><b>Los valores dados para el compilador son:</u></b> <br> " +tabla_html + "<br><br>")
+            self.ParamCompileHecho = True
+            if self.ConfClasiHecho == True and self.ParamCompileHecho == True:
+                self.IniEjec.setEnabled(True)
 
+    '''
+    Function that opens the GenerarGrafica window when its button is selected
+    '''
+    def openGenerarGraficas(self):
+        rutaExperimentos = os.path.join(self.rutaOutput, "Experimentos")
+        self.graficasDialog = QtWidgets.QDialog()
+        self.uiGraficas = Ui_GenerarGrafica()
+        self.uiGraficas.setupUiGenerarGrafica(self.graficasDialog)
+        if not os.path.isdir(rutaExperimentos):
+            error_msg = "No se encontró la carpeta 'Experimentos' en la ruta de salida."
+            QMessageBox.critical(self, "Error", error_msg)
+            self.close()  # Cerrar la ventana actual
+        else:
+            self.graficasDialog.show()
+            self.uiGraficas.setRutaOutput(self.rutaOutput)
+
+    '''
+    Function intended to update the QTextLogger so that a flow of interaction with the user is displayed
+    '''
     def updateTextLoger(self):
         self.textLoger.repaint()  # Actualizar el contenido del objeto QTextEdit
         QtWidgets.QApplication.processEvents()  # Actualizar la interfaz gráfica
 
 
 
-
+    '''
+    Function destined to start the execution for the classifier with the given parameters
+    '''
     def iniciarEjec(self):
         list_of_dicts = []
 
         self.textLoger.clear()
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Inicio de la ejecución ----------------------'
+                              ' Inicio de la ejecución '
                               '</b></center></font size="10"><br><br>')
 
         for key, value in self.diccionario.items():
@@ -266,27 +308,20 @@ class Ui_MainWindow(QMainWindow):
                               "<br>")
 
 
-        EntrenDF = pd.read_csv(self.ruta +"/Entren_v1.csv")
-        PruebaDF = pd.read_csv(self.ruta +"/Prueba_v1.csv")
+        TodoDF = pd.read_csv(self.ruta +"/Todo.csv")
 
-        X_train, y_train = split_sequences(np.array(EntrenDF), 80)
+        TodoDF.drop(TodoDF.columns[[0]], axis=1, inplace=True)
+        listaUsr = np.sort(TodoDF.NombreUsr.unique())
+        listaMar = TodoDF.Marca.unique()
+        listaSen = TodoDF.Sensor.unique()
 
-        X_test, y_test = split_sequences(np.array(PruebaDF), 80)
 
-        # Este ejemplo se crea para un MLP, por lo que vamos a poner en
-        # cada entrada una ventana de 80 muestras, cada muestra con 3 datos-dimensiones.
-        # Es decir, las entradas son vectores de 240 componentes.
-        X_train = X_train.reshape(-1, 240)
-        X_test = X_test.reshape(-1, 240)
-
-        EPOCAS = self.epocas
 
         MetaModelo = list_of_dicts
 
 
-        # CapasMLP es una lista de diccionarios. Cada item de la lista es una capa
-        # descrita por un diccionario.
-        # Partimos de la idea de que hay que expandir todas las capas.
+        # MLPLayers is a list of dictionaries. Each item in the list is a layer described by a dictionary.
+        # We start from the idea that all layers must be expanded.
 
         ExpandCapas = []
 
@@ -299,7 +334,7 @@ class Ui_MainWindow(QMainWindow):
 
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Expansión de las capas ----------------------'
+                              ' Expansión de las capas '
                               '</b></center></font size="10"><br><br>')
 
         for idcapa in range(len(ExpandCapas)):
@@ -345,7 +380,7 @@ class Ui_MainWindow(QMainWindow):
 
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Agrupación de capas para formar los modelos ----------------------'
+                              'Agrupación de capas para formar los modelos '
                               '</b></center></font size="10"><br><br>')
 
         contadorMod=0
@@ -376,17 +411,17 @@ class Ui_MainWindow(QMainWindow):
             self.textLoger.append('<br>')
             contadorMod+=1
 
-        i = 0
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Generación de los directorios para cada modelo ----------------------'
+                              ' Generación de los directorios para cada modelo '
                               '</b></center></font size="10"><br><br>')
+        i = 0
 
         for Modelo in ListaModelos:
 
             modeloMLP = Sequential()
 
-            # La capa de entrada es la capa 0. Luego, la capa 1 es la primera capa oculta
+            # The input layer is layer 0. Then layer 1 is the first hidden layer
             PrimeraCapaOculta = True
             for capa in Modelo:
                 if PrimeraCapaOculta:
@@ -406,9 +441,11 @@ class Ui_MainWindow(QMainWindow):
                 if e.errno != errno.EEXIST:
                     raise
 
+            modeloMLP.compile(loss=self.loss, optimizer=self.optimize, metrics=['accuracy'])
             modeloMLP.save(pathDir + "/modeloMLP.mod")
+
             self.textLoger.append('Generando y guardando el .mod del Modelo '+ str(i) +' en <b>'+ pathDir + '/modeloMLP.mod'+ '</b>')
-            DatosDict = dict({"Modelo": Modelo, "EER": []})
+            DatosDict = dict({"Modelo":Modelo, "Usuarios":[]})
             Datos_xml = dicttoxml(DatosDict, attr_type=False)
             dom = parseString(Datos_xml)
 
@@ -418,98 +455,93 @@ class Ui_MainWindow(QMainWindow):
             fpxml.close()
 
             i = i + 1
-        # Ahora vamos, modelo por modelo, entrenando y probando
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Entrenamiento y prueba de cada modelo. 5 Repeticiones por modelo ----------------------'
+                              ' Entrenamiento y prueba de cada modelo. 5 Repeticiones por modelo '
                               '</b></center></font size="10"><br><br>')
         i = 0
         for Modelo in ListaModelos:
             pathDir = self.rutaOutput +"/Experimentos/" + str(i)
             pathModelo = pathDir + "/modeloMLP.mod"
-            EER = []
+
+            ResultadosQ = Queue()
+            self.textLoger.append("Iniciando modelo " + str(i))
 
             self.textLoger.append('<font size="4"><u>'
                                   'Modelo ' + str(i) + ' Resultados:'
                                   '</u></font size="4">')
 
-            Repeticiones = 5
-            for repeticion in range(0, Repeticiones):
-                modelo = tf.keras.models.load_model(pathModelo)
+            ResultadosTodosDF = pd.DataFrame()
+            # for usr in listaUsr:     ESTE DEBERÍA SER EL BUCLE, PERO POR RAZONES DE TIEMPO SÓLO USAMOS 2 USUARIOS
+            for usr in listaUsr:
+                Resultados_usr = EntrenaYPrueba(pathModelo, usuario=usr, listaMar=listaMar, listaSen=listaSen,
+                                                TodoDF=TodoDF, tipo=tipo, ResultadosQ=ResultadosQ, loss=self.loss,
+                                                optimizer=self.optimize, epocas=self.epocas, log=self.textLoger)
+                ResultadosTodosDF = pd.concat([ResultadosTodosDF, Resultados_usr])
+            NuevoUsuarioXML = ET.fromstring(ResultadosTodosDF.to_xml(root_name='Usuarios', row_name='Usuario'))
 
-                modelo.compile(loss=self.loss, optimizer=self.optimize, metrics=['accuracy'])
-                modelo.fit(X_train, y_train, batch_size=64, epochs=EPOCAS, verbose=0)
+            tree = ET.parse(pathDir + '/Experimento.xml')
+            raizXML = tree.getroot()
+            UsuariosXML = raizXML.find('Usuarios')
 
-                Salida_red = modelo.predict(X_test)
-                Salida_red = Salida_red.reshape(-1, 1)
+            for child in NuevoUsuarioXML.findall('Usuario'):
+                UsuariosXML.append(child)
 
-                # Evaluamos
-
-                EER.append(CalculaEER(Salida_red, y_test.reshape(-1, 1)))
-
-                self.textLoger.append("<br> La repetición " + str(repeticion + 1) +" ha terminado con un Error <b>EER=" + str(EER[repeticion]) +"</b>")
-
-            # Actualiza el fichero XML con la información del experimento
-
-                self.textLoger.append("<b>Actualizando el XML para añadirle el error calculado </b>")
-                fpxml = open(pathDir + '/Experimento.xml', "r")
-                xmlDoc = fpxml.read()
-                ExperimentoDict = xmltodict.parse(xmlDoc)
-
-                ModeloLista = ExperimentoDict['root']['Modelo']['item']
-
-                ExperimentoDict = dict({"Modelo": ModeloLista, 'EER': EER})
-
-                xmlDoc = dicttoxml(ExperimentoDict, attr_type=False)
-                dom = parseString(xmlDoc)
-
-                fpxml = open(pathDir + "/Experimento.xml", "w")
-                fpxml.write(dom.toprettyxml())
-                fpxml.close()
-            self.textLoger.append("<br>")
-
-            i = i + 1
-
-            pathDir = self.rutaOutput + "/Experimentos"
-
-            ResultadosLista = []
+            fpxml = open(pathDir + '/Experimento.xml', "wb")
+            tree.write(fpxml)
+            fpxml.close()
+            i = 1+i
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Obtención de la lista de resultados para cada experimento ----------------------'
+                              'Procesando resultados'
                               '</b></center></font size="10"><br><br>')
-
+        i = 0
+        ResultadosTodoDF = pd.DataFrame()
+        pathDir = self.rutaOutput + "/Experimentos/"
         for subDir in next(os.walk(pathDir))[1]:
             pathDir = self.rutaOutput + "/Experimentos/" + subDir
-            EER = []
+            pathExperimento = pathDir + "/Experimento.xml"
 
-            fpxml = open(pathDir + "/Experimento.xml", "r")
+            self.textLoger.append('<br><font size="4"><center><b>'
+                                  'Procesando resultados de ' + pathExperimento+ ''
+                                  '</b></center></font size="4"><br><br>')
+
+            fpxml = open(pathExperimento, "r")
             xmlDoc = fpxml.read()
             fpxml.close()
+
             ExperimentoDict = xmltodict.parse(xmlDoc)
-            ModeloList = ExperimentoDict['root']['Modelo']['item']
-            nepList = []
-            activacionList = []
-            numCapas = len(ModeloList)
-            for idCapa in range(numCapas):
-                nepList.append(ModeloList[idCapa]['Nep'])
-                activacionList.append(ModeloList[idCapa]['Activacion'])
-            EERList = list(map(float, ExperimentoDict['root']['EER']['item']))
 
-            Fila = [nepList, activacionList, np.mean(EERList)]
+            UsuariosDF = pd.DataFrame(ExperimentoDict['root']['Usuarios']['Usuario'])
+            UsuariosDF['EERlist'] = UsuariosDF['EER'].apply(lambda x: x.split())
 
+            EERmedio = []
+            for strList in UsuariosDF['EERlist']:
+                EERList = [float(i) for i in strList]
+                EERmedio.append(np.average(EERList))
+            UsuariosDF['EERmedio'] = EERmedio
+            UsuariosDF.drop('EER', axis=1, inplace=True)
+            UsuariosDF.drop('EERlist', axis=1, inplace=True)
+            UsuariosDF
 
-            ResultadosLista.append(Fila)
+            ModeloDict = ExperimentoDict['root']['Modelo']['item']
+            # We extract all the parameters that define the model
 
+            idCapa = 0
+            for capa in ModeloDict:
+                for key in capa:
+                    ValorCol = capa[key]
+                    UsuariosDF[key + str(idCapa)] = ValorCol
+                idCapa = idCapa + 1
 
-        #self.textLoger.append("<b>El resultado de la lista es: " + str(ResultadosLista) + "</b>")
+            ResultadosTodoDF = pd.concat([ResultadosTodoDF, UsuariosDF], ignore_index=True)
 
-        ResultadosDF = pd.DataFrame(ResultadosLista, columns=['Arquitectura', 'Activaciones', 'EER'])
-        ResultadosDF.sort_values(by='EER')
 
         self.textLoger.append('<br><font size="10"><center><b>'
-                              '---------------------- Fin de la ejecución ----------------------'
-                              '</b></center></font size="10"><br><br>')
+                              'Fin de la ejecución '
+                              '</b></font size="10"><br></center><br>')
         return 0
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -517,9 +549,9 @@ class Ui_MainWindow(QMainWindow):
         self.RInput.setText(_translate("MainWindow", "Ruta Input"))
         self.ROutput.setText(_translate("MainWindow", "Ruta Output"))
         self.ConfClasi.setText(_translate("MainWindow", "Configurar clasificador"))
-        self.ConfParamCompile.setText(_translate("MainWindow", "Parametros del Compile"))
+        self.ConfParamCompile.setText(_translate("MainWindow", "Parámetros del Compile"))
         self.IniEjec.setText(_translate("MainWindow", "Inicio ejecución"))
-        self.Grafic.setText(_translate("MainWindow", "Graficas"))
+        self.Grafic.setText(_translate("MainWindow", "Gráficas"))
 
 
 if __name__ == "__main__":
